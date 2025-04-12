@@ -96,40 +96,31 @@ export const signMessage = async (message: string, address: string): Promise<str
   }
 }
 
-// Disconnect (this is a client-side only operation)
-export const disconnectWallet = (): void => {
-  // MetaMask doesn't have a disconnect method
-  // We just clear our local state
-  console.log("Wallet disconnected (client-side only)")
-}
-
 // Format address for display
 export const formatAddress = (address: string): string => {
   return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
 }
 
-// Get Etherscan link for address
+// Get Etherscan Link
 export const getEtherscanLink = (address: string): string => {
-  return `https://etherscan.io/address/${address}`
-}
+  const chainId = Number(window.ethereum.chainId)
+  let networkPrefix = ""
 
-// Add event listeners for account and chain changes
-export const setupWalletListeners = (
-  onAccountsChanged: (accounts: string[]) => void,
-  onChainChanged: (chainId: string) => void,
-): (() => void) => {
-  if (!isMetaMaskAvailable()) {
-    return () => {}
+  switch (chainId) {
+    case 1: // Mainnet
+      networkPrefix = ""
+      break
+    case 5: // Goerli
+      networkPrefix = "goerli."
+      break
+    case 11155111: // Sepolia
+      networkPrefix = "sepolia."
+      break
+    default:
+      return "https://etherscan.io/address/" + address // Default to mainnet if chain is unknown
   }
 
-  window.ethereum.on("accountsChanged", onAccountsChanged)
-  window.ethereum.on("chainChanged", onChainChanged)
-
-  // Return cleanup function
-  return () => {
-    window.ethereum.removeListener("accountsChanged", onAccountsChanged)
-    window.ethereum.removeListener("chainChanged", onChainChanged)
-  }
+  return `https://${networkPrefix}etherscan.io/address/${address}`
 }
 
 // Add window.ethereum type definition
