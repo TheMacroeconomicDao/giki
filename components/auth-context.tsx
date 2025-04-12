@@ -133,7 +133,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setWallet(connectedWallet)
       setAuthLevel("connected")
       updatePermissions(connectedWallet.address)
-      return true
+
+      // Start signing process automatically if we're now connected
+      if (connectedWallet.address) {
+        return true
+      }
+      return false
     } catch (error: any) {
       console.error("Failed to connect wallet:", error)
       toast({
