@@ -5,11 +5,11 @@ import "./globals.css"
 import { AuthProvider } from "@/components/auth-context"
 import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin", "cyrillic"] })
 
 export const metadata: Metadata = {
-  title: "Wiki.js with Web3 Auth",
-  description: "A Wiki.js interface with Ethereum wallet authentication",
+  title: "Wiki.js - Collaborative Knowledge Base",
+  description: "A modern, collaborative knowledge base with Ethereum wallet authentication",
     generator: 'v0.dev'
 }
 
