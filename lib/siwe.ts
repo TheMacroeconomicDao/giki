@@ -8,7 +8,7 @@ export const createSiweMessage = (address: string, statement: string) => {
   const message = new SiweMessage({
     domain,
     address,
-    statement,
+    statement: statement || "Sign this message to authenticate with Giki.js",
     uri: origin,
     version: "1",
     chainId: 1,
