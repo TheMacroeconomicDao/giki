@@ -20,7 +20,7 @@ export function EnvironmentWarning() {
         <div className="flex-1">
           <h3 className="font-medium text-amber-800 dark:text-amber-500">MetaMask Required</h3>
           <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
-            This Wiki.js interface requires MetaMask for wallet authentication. Please install MetaMask to connect your
+            This Giki.js interface requires MetaMask for wallet authentication. Please install MetaMask to connect your
             wallet.
           </p>
         </div>

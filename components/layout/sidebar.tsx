@@ -85,6 +85,8 @@ export function Sidebar({ currentLanguage, isOpen, onToggle }: SidebarProps) {
     { path: "/help", label: t[currentLanguage].help, icon: HelpCircle },
   ]
 
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
   return (
     <>
       {/* Overlay for mobile */}
@@ -100,7 +102,7 @@ export function Sidebar({ currentLanguage, isOpen, onToggle }: SidebarProps) {
         <div className="flex h-16 items-center justify-between border-b px-4">
           <Link href="/" className="flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-emerald-600" />
-            {isOpen && <span className="text-xl font-semibold">Wiki.js</span>}
+            {!isCollapsed && <span className="text-xl font-semibold">Giki.js</span>}
           </Link>
           <Button variant="ghost" size="icon" onClick={onToggle} className="hidden md:flex">
             {isOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
