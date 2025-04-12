@@ -2,14 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import {
-  type WalletInfo,
-  getCurrentWallet,
-  connectMetaMask,
-  signMessage,
-  setupWalletListeners,
-  isMetaMaskAvailable,
-} from "@/lib/wallet-utils"
+import { type WalletInfo, connectMetaMask, signMessage, isMetaMaskAvailable } from "@/lib/wallet-utils"
 import { toast } from "@/components/ui/use-toast"
 
 // Define role types
@@ -48,7 +41,7 @@ const rolePermissions: Record<Role, Omit<UserPermissions, "role">> = {
 // In a real app, this would come from a database
 const addressRoles: Record<string, Role> = {
   // Default role for any address
-  default: "viewer",
+  default: "editor", // Changed to editor for demo purposes
 }
 
 // Auth levels
@@ -104,51 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const init = async () => {
       setIsMetaMaskInstalled(isMetaMaskAvailable())
-
-      try {
-        const currentWallet = await getCurrentWallet()
-        setWallet(currentWallet)
-
-        if (currentWallet.isConnected) {
-          setAuthLevel("connected")
-          updatePermissions(currentWallet.address)
-        }
-      } catch (error) {
-        console.error("Failed to initialize wallet:", error)
-      } finally {
-        setLoading(false)
-      }
+      setLoading(false)
     }
 
     init()
-  }, [])
-
-  // Set up wallet event listeners
-  useEffect(() => {
-    if (!isMetaMaskAvailable()) return
-
-    const handleAccountsChanged = (accounts: string[]) => {
-      if (accounts.length === 0) {
-        // User disconnected their wallet
-        setWallet({ address: null, isConnected: false, chainId: null, connector: null })
-        setAuthLevel("none")
-        setIsAuthenticated(false)
-        setPermissions(null)
-      } else {
-        // Account changed
-        setWallet((prev) => ({ ...prev, address: accounts[0], isConnected: true }))
-        setAuthLevel("connected")
-        setIsAuthenticated(false) // Require re-authentication when account changes
-        updatePermissions(accounts[0])
-      }
-    }
-
-    const handleChainChanged = (chainId: string) => {
-      setWallet((prev) => ({ ...prev, chainId: Number.parseInt(chainId, 16) }))
-    }
-
-    const cleanup = setupWalletListeners(handleAccountsChanged, handleChainChanged)
-    return cleanup
   }, [])
 
   // Update permissions when address changes
@@ -181,12 +133,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setWallet(connectedWallet)
       setAuthLevel("connected")
       updatePermissions(connectedWallet.address)
-
-      toast({
-        title: "Wallet connected",
-        description: "Your wallet has been connected successfully",
-      })
-
       return true
     } catch (error: any) {
       console.error("Failed to connect wallet:", error)
@@ -201,7 +147,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Disconnect wallet
   const disconnectWallet = () => {
-    disconnectWallet()
     setWallet({ address: null, isConnected: false, chainId: null, connector: null })
     setAuthLevel("none")
     setIsAuthenticated(false)
