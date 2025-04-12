@@ -13,13 +13,18 @@ interface MultilingualEditorProps {
   initialTitle?: string
   initialContent?: string
   initialLanguage?: Language
-  onSave?: (data: { title: string; content: string; language: Language }) => void
+  pageId?: string
+  onSave?: (data: {
+    pageId?: string
+    contents: Record<Language, { title: string; content: string; language: Language }>
+  }) => void
 }
 
 export function MultilingualEditor({
   initialTitle = "",
   initialContent = "",
   initialLanguage = "en",
+  pageId,
   onSave,
 }: MultilingualEditorProps) {
   const { toast } = useToast()
@@ -54,7 +59,8 @@ export function MultilingualEditor({
     }))
   }
 
-  // Translate content from current language to target language
+  // Update the handleTranslate function to show better loading states
+
   const handleTranslate = async (targetLanguage: Language) => {
     const sourceLanguage = activeLanguage
 
@@ -70,20 +76,30 @@ export function MultilingualEditor({
     setIsTranslating(true)
 
     try {
-      // Translate content
+      // First translate the content
+      toast({
+        title: "Translation in progress",
+        description: `Translating content to ${targetLanguage === "en" ? "English" : "Russian"}...`,
+      })
+
       const contentResult = await translateContent(content[sourceLanguage], sourceLanguage, targetLanguage)
 
-      if (contentResult.success) {
-        setContent((prev) => ({
-          ...prev,
-          [targetLanguage]: contentResult.translatedContent,
-        }))
-      } else {
-        throw new Error(contentResult.error || "Translation failed")
+      if (!contentResult.success) {
+        throw new Error(contentResult.error || "Content translation failed")
       }
 
-      // Translate title if it exists
+      setContent((prev) => ({
+        ...prev,
+        [targetLanguage]: contentResult.translatedContent,
+      }))
+
+      // Then translate the title if it exists
       if (title[sourceLanguage].trim() !== "") {
+        toast({
+          title: "Translating title",
+          description: `Translating title to ${targetLanguage === "en" ? "English" : "Russian"}...`,
+        })
+
         const titleResult = await translateContent(title[sourceLanguage], sourceLanguage, targetLanguage)
 
         if (titleResult.success) {
@@ -116,10 +132,23 @@ export function MultilingualEditor({
   // Handle save
   const handleSave = () => {
     if (onSave) {
+      // Prepare content in both languages
+      const contents: Record<Language, { title: string; content: string; language: Language }> = {
+        en: {
+          title: title.en,
+          content: content.en,
+          language: "en",
+        },
+        ru: {
+          title: title.ru,
+          content: content.ru,
+          language: "ru",
+        },
+      }
+
       onSave({
-        title: title[activeLanguage],
-        content: content[activeLanguage],
-        language: activeLanguage,
+        pageId,
+        contents,
       })
     }
   }
