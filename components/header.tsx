@@ -1,103 +1,162 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Menu, X, Search, Bell, BookOpen } from "lucide-react"
+import type React from "react"
+
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/components/auth-context"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { SignInButton } from "@/components/sign-in-button"
-import { AdminButton } from "@/components/admin-button"
+import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Bell, ChevronDown, Menu, Moon, Search, Settings, Sun, User } from "lucide-react"
+import { useTheme } from "next-themes"
+import { useState } from "react"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sidebar } from "@/components/sidebar"
+import { useWeb3 } from "@/hooks/use-web3"
+import { useAuth } from "@/hooks/use-auth"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
-export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const pathname = usePathname()
-  const { isAuthenticated, hasPermission } = useAuth()
+export default function Header() {
+  const { theme, setTheme } = useTheme()
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const { address, connect, disconnect, isConnected } = useWeb3()
+  const { user, isAuthenticated, login, logout } = useAuth()
+  const router = useRouter()
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen)
+  const shortenAddress = (addr: string) => {
+    return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : ""
   }
 
-  const navItems = [
-    { href: "/", label: "Home" },
-    { href: "/pages", label: "Pages" },
-    { href: "/editor", label: "Create" },
-    { href: "/history", label: "History" },
-  ]
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+    }
+  }
+
+  const handleConnect = async () => {
+    try {
+      await connect()
+      if (address) {
+        await login(address)
+      }
+    } catch (error) {
+      console.error("Connection error:", error)
+    }
+  }
+
+  const handleDisconnect = () => {
+    disconnect()
+    logout()
+  }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="mr-4 flex items-center md:hidden">
-          <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label="Toggle menu">
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-emerald-600" />
-            <span className="hidden font-bold sm:inline-block text-xl">Giki.js</span>
+    <header className="border-b sticky top-0 z-30 bg-background">
+      <div className="flex h-16 items-center px-4 md:px-6">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="md:hidden mr-2">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 pt-10">
+            <Sidebar />
+          </SheetContent>
+        </Sheet>
+
+        <div className="flex items-center gap-2 md:hidden">
+          <Link href="/" className="font-bold text-xl">
+            Giki.js
           </Link>
         </div>
-        <nav className="hidden md:flex md:flex-1 md:items-center md:justify-between">
-          <ul className="ml-6 flex gap-6">
-            {navItems.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Search">
-              <Search className="h-5 w-5" />
-            </Button>
-            {isAuthenticated && (
-              <Button variant="ghost" size="icon" aria-label="Notifications">
-                <Bell className="h-5 w-5" />
-              </Button>
-            )}
-            <ThemeToggle />
-            <SignInButton />
-            {isAuthenticated && hasPermission("canManageUsers") && <AdminButton />}
-          </div>
-        </nav>
-        <div className="flex flex-1 items-center justify-end gap-2 md:hidden">
-          <Button variant="ghost" size="icon" aria-label="Search">
+
+        <div className={`${searchOpen ? "flex" : "hidden md:flex"} flex-1 items-center mx-4`}>
+          <form className="w-full" onSubmit={handleSearch}>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search pages..."
+                className="w-full pl-8 md:w-[300px] lg:w-[400px]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </form>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-5 w-5" />
+            <span className="sr-only">Search</span>
           </Button>
-          <ThemeToggle />
-          <SignInButton />
-          {isAuthenticated && hasPermission("canManageUsers") && <AdminButton />}
+
+          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+
+          <Button variant="ghost" size="icon">
+            <Bell className="h-5 w-5" />
+            <span className="sr-only">Notifications</span>
+          </Button>
+
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {user?.name?.slice(0, 2).toUpperCase() || address?.slice(2, 4).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden md:inline-flex">{user?.name || shortenAddress(address || "")}</span>
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard">
+                    <User className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                {user?.role === "admin" && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Admin Panel
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleDisconnect}>Disconnect Wallet</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button onClick={handleConnect}>Connect Wallet</Button>
+          )}
         </div>
       </div>
-      {isMenuOpen && (
-        <div className="container pb-3 md:hidden">
-          <nav className="flex flex-col space-y-3">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`rounded-md px-3 py-2 text-sm font-medium ${
-                  pathname === item.href
-                    ? "bg-accent text-accent-foreground"
-                    : "hover:bg-accent hover:text-accent-foreground"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      )}
     </header>
   )
 }

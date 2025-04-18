@@ -1,72 +1,50 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
+import OpenAI from "openai"
 
-export async function POST(request: NextRequest) {
+// Initialize OpenAI client
+// In production, use environment variables for the API key
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || "your-api-key",
+})
+
+export async function POST(req: Request) {
   try {
-    const { content, fromLanguage, toLanguage } = await request.json()
+    const { content, sourceLanguage, targetLanguage } = await req.json()
 
-    // Validate input
-    if (!content || !fromLanguage || !toLanguage) {
-      return NextResponse.json({ error: "Missing required fields: content, fromLanguage, toLanguage" }, { status: 400 })
+    if (!content) {
+      return NextResponse.json({ error: "Content is required" }, { status: 400 })
     }
 
-    // Skip translation if content is empty
-    if (!content.trim()) {
-      return NextResponse.json({ translatedContent: "", success: true })
-    }
+    // Prepare the prompt for translation
+    const prompt = `Translate the following text from ${sourceLanguage} to ${targetLanguage}. 
+    Preserve all Markdown formatting, code blocks, and special characters.
+    
+    Text to translate:
+    ${content}`
 
-    // Determine the instruction based on language direction
-    let instruction = ""
-    if (fromLanguage === "ru" && toLanguage === "en") {
-      instruction =
-        "Translate the following Russian text to English. Preserve all formatting, including Markdown syntax, lists, and code blocks."
-    } else if (fromLanguage === "en" && toLanguage === "ru") {
-      instruction =
-        "Translate the following English text to Russian. Preserve all formatting, including Markdown syntax, lists, and code blocks."
-    } else {
-      return NextResponse.json({ error: "Unsupported language combination" }, { status: 400 })
-    }
-
-    // Call OpenAI API
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: instruction,
-          },
-          {
-            role: "user",
-            content: content,
-          },
-        ],
-        temperature: 0.3, // Lower temperature for more consistent translations
-      }),
+    // Call OpenAI API for translation
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a professional translator. Translate the provided text accurately while preserving all formatting, including Markdown syntax, code blocks, and special characters.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.3, // Lower temperature for more consistent translations
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`OpenAI API error: ${errorData.error?.message || "Unknown error"}`)
-    }
+    // Extract the translated text from the response
+    const translatedText = completion.choices[0].message.content
 
-    const data = await response.json()
-    return NextResponse.json({
-      translatedContent: data.choices[0].message.content,
-      success: true,
-    })
+    return NextResponse.json({ translatedText })
   } catch (error) {
     console.error("Translation error:", error)
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Failed to translate content",
-        success: false,
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: "Failed to translate content" }, { status: 500 })
   }
 }
