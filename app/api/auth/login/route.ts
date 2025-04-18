@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       await updateLastLogin(user.id)
     }
 
-    // Create access and refresh tokens
+    // Create access and refresh tokens with proper expiration
     const accessToken = await createAccessToken({
       sub: user.id,
       address: user.address,
