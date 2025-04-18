@@ -133,6 +133,6 @@ npm test
 ## License
 
 AGPL
-\`\`\`
+
 
 Let's create a sample `.env` file:
