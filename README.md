@@ -31,8 +31,7 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=giki
 
-# Authentication
-JWT_SECRET=your-secret-key-here-minimum-32-characters-long
+
 
 # OpenAI (for AI features)
 OPENAI_API_KEY=your-openai-api-key
