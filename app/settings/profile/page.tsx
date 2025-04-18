@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,6 +17,9 @@ export default function ProfileSettings() {
   const { toast } = useToast()
   const { user, updateUser } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,6 +31,8 @@ export default function ProfileSettings() {
         name: user.name || "",
         email: user.email || "",
       })
+      // Set avatar URL if available in user data
+      setAvatarUrl(user.avatarUrl || null)
     }
   }, [user])
 
@@ -37,6 +44,7 @@ export default function ProfileSettings() {
       await updateUser({
         name: formData.name,
         email: formData.email,
+        avatarUrl: avatarUrl,
       })
 
       // Toast notification is handled in the updateUser function
@@ -46,6 +54,80 @@ export default function ProfileSettings() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setUploading(true)
+
+      // Create form data for upload
+      const formData = new FormData()
+      formData.append("file", file)
+
+      // Upload the file
+      const response = await fetch("/api/users/avatar", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image")
+      }
+
+      const data = await response.json()
+
+      // Update avatar URL
+      setAvatarUrl(data.avatarUrl)
+
+      toast({
+        title: "Profile picture updated",
+        description: "Your profile picture has been updated successfully",
+      })
+    } catch (error) {
+      console.error("Error uploading file:", error)
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your profile picture",
+        variant: "destructive",
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleRemoveAvatar = () => {
+    setAvatarUrl(null)
+    toast({
+      title: "Profile picture removed",
+      description: "Your profile picture has been removed",
+    })
   }
 
   if (!user) {
@@ -75,7 +157,7 @@ export default function ProfileSettings() {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-6">
               <Avatar className="h-20 w-20">
-                <AvatarImage src="/placeholder.svg" />
+                <AvatarImage src={avatarUrl || "/placeholder.svg"} />
                 <AvatarFallback className="text-xl">
                   {user.name ? user.name.slice(0, 2).toUpperCase() : user.address.slice(2, 4).toUpperCase()}
                 </AvatarFallback>
@@ -86,10 +168,17 @@ export default function ProfileSettings() {
                   This will be displayed on your profile and in comments.
                 </p>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    Change
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  <Button variant="outline" size="sm" onClick={triggerFileInput} disabled={uploading}>
+                    {uploading ? "Uploading..." : "Change"}
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={handleRemoveAvatar} disabled={!avatarUrl}>
                     Remove
                   </Button>
                 </div>

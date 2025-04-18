@@ -69,7 +69,6 @@
     "react-diff-viewer-continued": "latest",
     "@testing-library/jest-dom": "latest",
     "cypress": "latest",
-    "jose": "latest",
     "ethers": "latest",
     "@neondatabase/serverless": "latest",
     "uuid": "latest",
@@ -84,7 +83,13 @@
     "rehype-slug": "latest",
     "rehype-autolink-headings": "latest",
     "react-syntax-highlighter": "latest",
-    "octokit": "latest"
+    "octokit": "latest",
+    "child_process": "latest",
+    "fs": "latest",
+    "path": "latest",
+    "react-hot-toast": "latest",
+    "crypto": "latest",
+    "jose": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

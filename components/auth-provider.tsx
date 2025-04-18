@@ -17,6 +17,7 @@ interface User {
   name: string | null
   email: string | null
   role: "admin" | "editor" | "viewer"
+  avatarUrl?: string | null
   preferences?: UserPreferences
 }
 
@@ -66,12 +67,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        setIsLoading(true)
         // Try to get the current user
         const response = await fetch("/api/auth/me")
 
         if (response.ok) {
           const data = await response.json()
           setUser(data.user)
+        } else {
+          // Check if token is expired
+          const data = await response.json()
+          if (data.code === "TOKEN_EXPIRED") {
+            // Try to refresh the token
+            const refreshed = await refreshToken()
+            if (refreshed) {
+              // If token was refreshed successfully, try to get user again
+              const newResponse = await fetch("/api/auth/me")
+              if (newResponse.ok) {
+                const newData = await newResponse.json()
+                setUser(newData.user)
+              }
+            }
+          }
         }
       } catch (error) {
         console.error("Auth check error:", error)
@@ -92,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       () => {
         refreshToken()
       },
-      10 * 60 * 1000,
+      10 * 60 * 1000, // 10 minutes
     )
 
     return () => clearInterval(interval)
@@ -102,6 +119,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true)
 
+      // Check if address is provided
+      if (!address) {
+        throw new Error("Wallet address is required")
+      }
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -110,11 +132,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ address, signature, message }),
       })
 
+      // Handle non-OK responses
       if (!response.ok) {
-        throw new Error("Login failed")
+        const contentType = response.headers.get("content-type")
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || "Login failed")
+        } else {
+          throw new Error(`Login failed: ${response.status} ${response.statusText}`)
+        }
       }
 
       const data = await response.json()
+
+      // Validate response data
+      if (!data.user) {
+        throw new Error("Invalid response: user data missing")
+      }
+
       setUser(data.user)
 
       toast({
@@ -127,7 +162,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Login error:", error)
       toast({
         title: "Login failed",
-        description: "There was an error logging in. Please try again.",
+        description:
+          typeof error === "object" && error !== null && "message" in error
+            ? String(error.message)
+            : "There was an error logging in. Please try again.",
         variant: "destructive",
       })
       throw error

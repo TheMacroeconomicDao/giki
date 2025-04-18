@@ -8,7 +8,7 @@ import { ethers } from "ethers"
 interface Web3ContextType {
   address: string | null
   isConnected: boolean
-  connect: () => Promise<string | undefined>
+  connect: () => Promise<string>
   disconnect: () => void
   signMessage: (message: string) => Promise<string>
 }
@@ -16,7 +16,7 @@ interface Web3ContextType {
 export const Web3Context = createContext<Web3ContextType>({
   address: null,
   isConnected: false,
-  connect: async () => undefined,
+  connect: async () => "",
   disconnect: () => {},
   signMessage: async () => "",
 })
@@ -42,7 +42,7 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const connect = async () => {
+  const connect = async (): Promise<string> => {
     try {
       // Check if MetaMask is installed
       if (typeof window !== "undefined" && window.ethereum) {
@@ -82,6 +82,8 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
     setProvider(null)
     localStorage.removeItem("walletConnected")
     localStorage.removeItem("walletAddress")
+    localStorage.removeItem("auth_token")
+    localStorage.removeItem("auth_user")
   }
 
   const signMessage = async (message: string): Promise<string> => {

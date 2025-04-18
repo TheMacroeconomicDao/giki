@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/components/auth-provider"
 import { Web3Provider } from "@/components/web3-provider"
+import { ErrorBoundary } from "@/components/error-boundary"
 import Header from "@/components/header"
 
 // Update the import path to match the new location
@@ -25,11 +26,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Web3Provider>
             <AuthProvider>
-              <div className="flex min-h-screen flex-col">
-                <Header />
-                <main className="flex-1">{children}</main>
-              </div>
-              <Toaster />
+              <ErrorBoundary>
+                <div className="flex min-h-screen flex-col">
+                  <Header />
+                  <main className="flex-1">{children}</main>
+                </div>
+                <Toaster />
+              </ErrorBoundary>
             </AuthProvider>
           </Web3Provider>
         </ThemeProvider>

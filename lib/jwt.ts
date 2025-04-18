@@ -34,7 +34,10 @@ export async function signJWT(payload: JWTPayload, expiresIn: string = ACCESS_TO
  */
 export async function verifyJWT<T>(token: string): Promise<T> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
+    // Add clock tolerance to handle slight time differences
+    const { payload } = await jwtVerify(token, JWT_SECRET, {
+      clockTolerance: 60, // 60 seconds of clock tolerance
+    })
     return payload as unknown as T
   } catch (error) {
     console.error("JWT verification failed:", error)

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { verifyJWT, type JWTPayload } from "@/lib/jwt"
 import { getUserById } from "@/lib/user-service"
+import { logger } from "@/lib/logger"
 
 export async function GET(req: Request) {
   try {
@@ -39,11 +40,14 @@ export async function GET(req: Request) {
         },
       })
     } catch (error) {
-      // Invalid or expired token
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      // If token verification fails, try to refresh the token
+      logger.error("Token verification error:", error)
+
+      // Return a specific error code that the client can handle
+      return NextResponse.json({ error: "Token expired", code: "TOKEN_EXPIRED" }, { status: 401 })
     }
   } catch (error) {
-    console.error("Auth error:", error)
+    logger.error("Auth error:", error)
     return NextResponse.json({ error: "Authentication failed" }, { status: 500 })
   }
 }

@@ -28,7 +28,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const { address, connect, disconnect, isConnected } = useWeb3()
-  const { user, isAuthenticated, login, logout } = useAuth()
+  const { user, isAuthenticated, login, logout, isLoading } = useAuth()
   const router = useRouter()
 
   const shortenAddress = (addr: string) => {
@@ -44,18 +44,22 @@ export default function Header() {
 
   const handleConnect = async () => {
     try {
-      await connect()
-      if (address) {
-        await login(address)
+      const connectedAddress = await connect()
+      if (connectedAddress) {
+        await login(connectedAddress)
       }
     } catch (error) {
       console.error("Connection error:", error)
     }
   }
 
-  const handleDisconnect = () => {
-    disconnect()
-    logout()
+  const handleDisconnect = async () => {
+    try {
+      disconnect()
+      await logout()
+    } catch (error) {
+      console.error("Disconnect error:", error)
+    }
   }
 
   return (
@@ -153,7 +157,9 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={handleConnect}>Connect Wallet</Button>
+            <Button onClick={handleConnect} disabled={isLoading}>
+              {isLoading ? "Connecting..." : "Connect Wallet"}
+            </Button>
           )}
         </div>
       </div>
