@@ -1,285 +1,401 @@
-// This is a mock service for page operations
-// In a real app, this would interact with a database
-
-export type PageVisibility = "public" | "private" | "community"
+import { query, queryOne } from "@/lib/db"
+import { logger } from "@/lib/logger"
 
 export interface Page {
   id: string
   title: string
   content: string
+  visibility: "public" | "community" | "private"
+  author_id: string
+  created_at: string
+  updated_at: string
+  views: number
+}
+
+export interface PageVersion {
+  id: string
+  page_id: string
+  content: string
+  created_at: string
+  created_by: string
+}
+
+export interface TranslatedContent {
+  id: string
+  page_id: string
   language: string
-  createdAt: Date
-  updatedAt: Date
-  createdBy: string
-  updatedBy: string
-  visibility: PageVisibility
-  translations?: Record<string, string>
-  status: "draft" | "published" | "scheduled"
-  publishedAt?: Date
-  scheduledFor?: Date
+  content: string
+  created_at: string
+  updated_at: string
 }
 
-// Mock database
-let pages: Page[] = [
-  {
-    id: "1",
-    title: "Getting Started with Giki.js",
-    content: "# Getting Started\n\nWelcome to Giki.js! This guide will help you get started with our platform.",
-    language: "en",
-    createdAt: new Date("2023-01-01"),
-    updatedAt: new Date("2023-01-02"),
-    createdBy: "0x1234567890123456789012345678901234567890",
-    updatedBy: "0x1234567890123456789012345678901234567890",
-    visibility: "public",
-    status: "published",
-    publishedAt: new Date("2023-01-02"),
-  },
-  {
-    id: "2",
-    title: "Advanced Features",
-    content: "# Advanced Features\n\nExplore the advanced features of Giki.js.",
-    language: "en",
-    createdAt: new Date("2023-01-03"),
-    updatedAt: new Date("2023-01-04"),
-    createdBy: "0x1234567890123456789012345678901234567890",
-    updatedBy: "0x1234567890123456789012345678901234567890",
-    visibility: "community",
-    status: "published",
-    publishedAt: new Date("2023-01-04"),
-  },
-  {
-    id: "3",
-    title: "Private Notes",
-    content: "# Private Notes\n\nThese are my private notes.",
-    language: "en",
-    createdAt: new Date("2023-01-05"),
-    updatedAt: new Date("2023-01-05"),
-    createdBy: "0x2345678901234567890123456789012345678901",
-    updatedBy: "0x2345678901234567890123456789012345678901",
-    visibility: "private",
-    status: "draft",
-  },
-]
-
-// Get all pages
-export async function getAllPages(userAddress?: string): Promise<Page[]> {
-  // If no user is logged in, return only public pages
-  if (!userAddress) {
-    return pages.filter((page) => page.visibility === "public" && page.status === "published")
+export interface PageWithAuthor extends Page {
+  author: {
+    id: string
+    name: string | null
+    address: string
   }
-
-  // If user is logged in, return public pages, community pages, and their private pages
-  return pages.filter(
-    (page) =>
-      (page.visibility === "public" && page.status === "published") ||
-      (page.visibility === "community" && page.status === "published") ||
-      (page.visibility === "private" && page.createdBy === userAddress),
-  )
 }
 
-// Get page by ID
-export async function getPageById(id: string, userAddress?: string): Promise<Page | null> {
-  const page = pages.find((p) => p.id === id)
+export interface PageWithDetails extends PageWithAuthor {
+  translations: string[]
+  version_count: number
+}
 
-  if (!page) {
+export async function createPage(pageData: {
+  title: string
+  content: string
+  visibility: "public" | "community" | "private"
+  author_id: string
+}): Promise<Page | null> {
+  try {
+    // Insert the page
+    const page = await queryOne<Page>(
+      `
+      INSERT INTO pages (title, content, visibility, author_id)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `,
+      [pageData.title, pageData.content, pageData.visibility, pageData.author_id],
+    )
+
+    if (!page) return null
+
+    // Create the initial version
+    await query(
+      `
+      INSERT INTO page_versions (page_id, content, created_by)
+      VALUES ($1, $2, $3)
+    `,
+      [page.id, pageData.content, pageData.author_id],
+    )
+
+    return page
+  } catch (error) {
+    logger.error("Error creating page:", error as Error)
     return null
   }
-
-  // Check visibility permissions
-  if (
-    page.visibility === "public" ||
-    (page.visibility === "community" && userAddress) ||
-    (page.visibility === "private" && page.createdBy === userAddress)
-  ) {
-    return page
-  }
-
-  return null
 }
 
-// Create a new page
-export async function createPage(
-  page: Omit<Page, "id" | "createdAt" | "updatedAt">,
-  userAddress: string,
-): Promise<Page> {
-  const newPage: Page = {
-    ...page,
-    id: Math.random().toString(36).substring(2, 11),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: userAddress,
-    updatedBy: userAddress,
-  }
+export async function getPageById(id: string): Promise<PageWithDetails | null> {
+  try {
+    const page = await queryOne<PageWithDetails>(
+      `
+      SELECT 
+        p.*,
+        u.id as author_id,
+        u.name as author_name,
+        u.address as author_address,
+        ARRAY(SELECT DISTINCT language FROM translated_content WHERE page_id = p.id) as translations,
+        (SELECT COUNT(*) FROM page_versions WHERE page_id = p.id) as version_count
+      FROM pages p
+      JOIN users u ON p.author_id = u.id
+      WHERE p.id = $1
+    `,
+      [id],
+    )
 
-  pages.push(newPage)
-  return newPage
+    if (!page) return null
+
+    // Format the page object
+    return {
+      ...page,
+      author: {
+        id: page.author_id,
+        name: page.author_name,
+        address: page.author_address,
+      },
+    }
+  } catch (error) {
+    logger.error("Error getting page by ID:", error as Error)
+    return null
+  }
 }
 
-// Update a page
 export async function updatePage(
   id: string,
-  updates: Partial<Omit<Page, "id" | "createdAt" | "createdBy">>,
-  userAddress: string,
+  data: {
+    title?: string
+    content?: string
+    visibility?: "public" | "community" | "private"
+  },
+  userId: string,
 ): Promise<Page | null> {
-  const pageIndex = pages.findIndex((p) => p.id === id)
+  try {
+    // Build the update query
+    const fields = []
+    const values = []
+    let paramIndex = 1
 
-  if (pageIndex === -1) {
+    if (data.title !== undefined) {
+      fields.push(`title = $${paramIndex}`)
+      values.push(data.title)
+      paramIndex++
+    }
+
+    if (data.content !== undefined) {
+      fields.push(`content = $${paramIndex}`)
+      values.push(data.content)
+      paramIndex++
+    }
+
+    if (data.visibility !== undefined) {
+      fields.push(`visibility = $${paramIndex}`)
+      values.push(data.visibility)
+      paramIndex++
+    }
+
+    fields.push(`updated_at = NOW()`)
+
+    // Add the page ID to values
+    values.push(id)
+
+    // Update the page
+    const page = await queryOne<Page>(
+      `
+      UPDATE pages
+      SET ${fields.join(", ")}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `,
+      values,
+    )
+
+    if (!page) return null
+
+    // If content was updated, create a new version
+    if (data.content !== undefined) {
+      await query(
+        `
+        INSERT INTO page_versions (page_id, content, created_by)
+        VALUES ($1, $2, $3)
+      `,
+        [id, data.content, userId],
+      )
+    }
+
+    return page
+  } catch (error) {
+    logger.error("Error updating page:", error as Error)
     return null
   }
-
-  // Check if user has permission to update
-  const page = pages[pageIndex]
-  if (page.createdBy !== userAddress && page.visibility === "private") {
-    return null
-  }
-
-  const updatedPage: Page = {
-    ...page,
-    ...updates,
-    updatedAt: new Date(),
-    updatedBy: userAddress,
-  }
-
-  pages[pageIndex] = updatedPage
-  return updatedPage
 }
 
-// Delete a page
-export async function deletePage(id: string, userAddress: string): Promise<boolean> {
-  const pageIndex = pages.findIndex((p) => p.id === id)
+export async function deletePage(id: string): Promise<boolean> {
+  try {
+    const result = await query(
+      `
+      DELETE FROM pages
+      WHERE id = $1
+      RETURNING id
+    `,
+      [id],
+    )
 
-  if (pageIndex === -1) {
+    return result.length > 0
+  } catch (error) {
+    logger.error("Error deleting page:", error as Error)
     return false
   }
-
-  // Check if user has permission to delete
-  const page = pages[pageIndex]
-  if (page.createdBy !== userAddress && page.visibility === "private") {
-    return false
-  }
-
-  pages = pages.filter((p) => p.id !== id)
-  return true
 }
 
-// Get page history (mock implementation)
-export async function getPageHistory(id: string): Promise<Omit<Page, "content">[]> {
-  // In a real app, this would fetch the version history from a database
-  // For now, we'll return a mock history
-  const page = pages.find((p) => p.id === id)
+export async function listPages(
+  options: {
+    visibility?: string
+    author_id?: string
+    limit?: number
+    offset?: number
+    search?: string
+  } = {},
+): Promise<{ pages: PageWithAuthor[]; total: number }> {
+  try {
+    const { visibility, author_id, limit = 10, offset = 0, search } = options
 
-  if (!page) {
+    // Build the WHERE clause
+    const conditions = []
+    const params: any[] = []
+    let paramIndex = 1
+
+    if (visibility) {
+      conditions.push(`p.visibility = $${paramIndex}`)
+      params.push(visibility)
+      paramIndex++
+    }
+
+    if (author_id) {
+      conditions.push(`p.author_id = $${paramIndex}`)
+      params.push(author_id)
+      paramIndex++
+    }
+
+    if (search) {
+      conditions.push(`(p.title ILIKE $${paramIndex} OR p.content ILIKE $${paramIndex})`)
+      params.push(`%${search}%`)
+      paramIndex++
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
+
+    // Get total count
+    const countResult = await queryOne<{ count: string }>(
+      `
+      SELECT COUNT(*) as count
+      FROM pages p
+      ${whereClause}
+    `,
+      params,
+    )
+
+    const total = Number.parseInt(countResult?.count || "0", 10)
+
+    // Get pages with pagination
+    const paginationParams = [...params, limit, offset]
+    const pages = await query<PageWithAuthor>(
+      `
+      SELECT 
+        p.*,
+        u.id as author_id,
+        u.name as author_name,
+        u.address as author_address
+      FROM pages p
+      JOIN users u ON p.author_id = u.id
+      ${whereClause}
+      ORDER BY p.updated_at DESC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `,
+      paginationParams,
+    )
+
+    // Format pages with author
+    const formattedPages = pages.map((page) => ({
+      ...page,
+      author: {
+        id: page.author_id,
+        name: page.author_name,
+        address: page.author_address,
+      },
+    }))
+
+    return { pages: formattedPages, total }
+  } catch (error) {
+    logger.error("Error listing pages:", error as Error)
+    return { pages: [], total: 0 }
+  }
+}
+
+export async function incrementPageViews(id: string): Promise<boolean> {
+  try {
+    await query(
+      `
+      UPDATE pages
+      SET views = views + 1
+      WHERE id = $1
+    `,
+      [id],
+    )
+    return true
+  } catch (error) {
+    logger.error("Error incrementing page views:", error as Error)
+    return false
+  }
+}
+
+export async function getPageVersions(pageId: string): Promise<PageVersion[]> {
+  try {
+    const versions = await query<PageVersion>(
+      `
+      SELECT *
+      FROM page_versions
+      WHERE page_id = $1
+      ORDER BY created_at DESC
+    `,
+      [pageId],
+    )
+
+    return versions
+  } catch (error) {
+    logger.error("Error getting page versions:", error as Error)
     return []
   }
+}
 
-  // Generate mock history entries
-  const history: Omit<Page, "content">[] = []
-  const now = new Date()
+export async function getPageVersion(versionId: string): Promise<PageVersion | null> {
+  try {
+    const version = await queryOne<PageVersion>(
+      `
+      SELECT *
+      FROM page_versions
+      WHERE id = $1
+    `,
+      [versionId],
+    )
 
-  for (let i = 0; i < 5; i++) {
-    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-    history.push({
-      ...page,
-      updatedAt: date,
-      updatedBy: i % 2 === 0 ? page.createdBy : "0x3456789012345678901234567890123456789012",
-    })
+    return version
+  } catch (error) {
+    logger.error("Error getting page version:", error as Error)
+    return null
   }
-
-  return history
 }
 
-// Publish a page
-export async function publishPage(id: string, userAddress: string): Promise<Page | null> {
-  return updatePage(
-    id,
-    {
-      status: "published",
-      publishedAt: new Date(),
-    },
-    userAddress,
-  )
+export async function addTranslation(translationData: {
+  page_id: string
+  language: string
+  content: string
+}): Promise<TranslatedContent | null> {
+  try {
+    const translation = await queryOne<TranslatedContent>(
+      `
+      INSERT INTO translated_content (page_id, language, content)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (page_id, language) 
+      DO UPDATE SET 
+        content = EXCLUDED.content,
+        updated_at = NOW()
+      RETURNING *
+    `,
+      [translationData.page_id, translationData.language, translationData.content],
+    )
+
+    return translation
+  } catch (error) {
+    logger.error("Error adding translation:", error as Error)
+    return null
+  }
 }
 
-// Save as draft
-export async function saveDraft(id: string, userAddress: string): Promise<Page | null> {
-  return updatePage(
-    id,
-    {
-      status: "draft",
-    },
-    userAddress,
-  )
+export async function getTranslation(pageId: string, language: string): Promise<TranslatedContent | null> {
+  try {
+    const translation = await queryOne<TranslatedContent>(
+      `
+      SELECT *
+      FROM translated_content
+      WHERE page_id = $1 AND language = $2
+    `,
+      [pageId, language],
+    )
+
+    return translation
+  } catch (error) {
+    logger.error("Error getting translation:", error as Error)
+    return null
+  }
 }
 
-// Schedule publishing
-export async function schedulePage(id: string, scheduledFor: Date, userAddress: string): Promise<Page | null> {
-  return updatePage(
-    id,
-    {
-      status: "scheduled",
-      scheduledFor,
-    },
-    userAddress,
-  )
-}
+export async function getPageTranslations(pageId: string): Promise<TranslatedContent[]> {
+  try {
+    const translations = await query<TranslatedContent>(
+      `
+      SELECT *
+      FROM translated_content
+      WHERE page_id = $1
+      ORDER BY language
+    `,
+      [pageId],
+    )
 
-export type VisibilityLevel = "public" | "private" | "community"
-
-export async function savePage(
-  contents: Record<string, { title: string; content: string; language: string }>,
-  userId: string,
-  pageId?: string,
-  visibility: VisibilityLevel = "private",
-  status: "draft" | "published" | "scheduled" = "draft",
-  scheduledPublishDate?: Date,
-  tags: string[] = [],
-): Promise<any> {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  const now = new Date()
-
-  if (pageId) {
-    // Update existing page
-    const pageIndex = pages.findIndex((p) => p.id === pageId)
-    if (pageIndex === -1) {
-      throw new Error("Page not found")
-    }
-
-    // Check if user has permission to edit this page
-    const page = pages[pageIndex]
-    if (page.visibility === "private" && page.createdBy !== userId) {
-      throw new Error("You don't have permission to edit this page")
-    }
-
-    // In a real app, we would update the page in the database
-    return {
-      id: pageId,
-      contents,
-      updatedAt: now,
-      updatedBy: userId,
-      visibility,
-      status,
-      scheduledPublishDate,
-      tags,
-    }
-  } else {
-    // Create new page
-    const primaryLanguage = Object.keys(contents)[0]
-    const newPageId = Math.random().toString(36).substring(2, 15)
-
-    // In a real app, we would save the page to the database
-    return {
-      id: newPageId,
-      contents,
-      createdAt: now,
-      updatedAt: now,
-      createdBy: userId,
-      updatedBy: userId,
-      visibility,
-      status,
-      scheduledPublishDate,
-      tags,
-    }
+    return translations
+  } catch (error) {
+    logger.error("Error getting page translations:", error as Error)
+    return []
   }
 }

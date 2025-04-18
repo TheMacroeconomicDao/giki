@@ -1,34 +1,39 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
-import { AuthProvider } from "@/components/auth-context"
+import { Inter } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from "@/components/auth-provider"
+import { Web3Provider } from "@/components/web3-provider"
+import Header from "@/components/header"
 
-const inter = Inter({ subsets: ["latin", "cyrillic"] })
+// Update the import path to match the new location
+import "./_init"
 
-export const metadata: Metadata = {
-  title: "Wiki.js - Collaborative Knowledge Base",
-  description: "A modern, collaborative knowledge base with Ethereum wallet authentication",
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata = {
+  title: "Giki.js",
+  description: "Next-Generation Wiki Platform",
     generator: 'v0.dev'
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-          <Toaster />
-        </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Web3Provider>
+            <AuthProvider>
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+              </div>
+              <Toaster />
+            </AuthProvider>
+          </Web3Provider>
+        </ThemeProvider>
       </body>
     </html>
   )
 }
-
-
-import './globals.css'
