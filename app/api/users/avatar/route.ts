@@ -1,5 +1,6 @@
 import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
 import { updateUser } from "@/lib/user-service"
+import { logger } from "@/lib/logger"
 
 export async function POST(req: Request) {
   try {
@@ -32,18 +33,44 @@ export async function POST(req: Request) {
       return errorResponse("File too large. Maximum size is 5MB.", 400)
     }
 
-    // In a real implementation, you would upload the file to a storage service
-    // like AWS S3, Cloudinary, or Vercel Blob Storage
-    // For this example, we'll simulate a successful upload with a mock URL
+    try {
+      // Convert the file to a data URL
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      const base64 = buffer.toString("base64")
+      const dataUrl = `data:${file.type};base64,${base64}`
 
-    // Generate a mock avatar URL
-    const timestamp = Date.now()
-    const avatarUrl = `/api/avatar/${userId}?t=${timestamp}`
+      // Update the user with the avatar URL
+      const updatedUser = await updateUser(userId, {
+        preferences: {
+          avatar_url: dataUrl
+        } as any
+      })
 
-    // Update the user with the new avatar URL
-    await updateUser(userId, { avatarUrl })
+      if (!updatedUser) {
+        throw new Error("Failed to update user with avatar")
+      }
 
-    return successResponse({ avatarUrl })
+      // Return the data URL to the client
+      return successResponse({ 
+        avatarUrl: dataUrl,
+        message: "Avatar uploaded successfully" 
+      })
+    } catch (error) {
+      logger.error("Error updating user with avatar:", error)
+      
+      // Return the data URL anyway so the client can use localStorage as fallback
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      const base64 = buffer.toString("base64")
+      const dataUrl = `data:${file.type};base64,${base64}`
+      
+      return successResponse({ 
+        avatarUrl: dataUrl,
+        message: "Avatar processed but not saved to database. Using client-side storage as fallback.",
+        useLocalStorage: true
+      })
+    }
   } catch (error) {
     return handleApiError(error, "Failed to upload avatar")
   }

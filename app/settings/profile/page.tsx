@@ -31,8 +31,17 @@ export default function ProfileSettings() {
         name: user.name || "",
         email: user.email || "",
       })
-      // Set avatar URL if available in user data
-      setAvatarUrl(user.avatarUrl || null)
+
+      // Try to get avatar URL from user data first
+      if (user.avatarUrl) {
+        setAvatarUrl(user.avatarUrl)
+      } else {
+        // Try to get from localStorage as fallback
+        const storedAvatarUrl = localStorage.getItem(`avatar_${user.id}`)
+        if (storedAvatarUrl) {
+          setAvatarUrl(storedAvatarUrl)
+        }
+      }
     }
   }, [user])
 
@@ -44,7 +53,6 @@ export default function ProfileSettings() {
       await updateUser({
         name: formData.name,
         email: formData.email,
-        avatarUrl: avatarUrl,
       })
 
       // Toast notification is handled in the updateUser function
@@ -102,6 +110,11 @@ export default function ProfileSettings() {
       // Update avatar URL
       setAvatarUrl(data.avatarUrl)
 
+      // Store in localStorage as fallback
+      if (user?.id) {
+        localStorage.setItem(`avatar_${user.id}`, data.avatarUrl)
+      }
+
       toast({
         title: "Profile picture updated",
         description: "Your profile picture has been updated successfully",
@@ -124,6 +137,10 @@ export default function ProfileSettings() {
 
   const handleRemoveAvatar = () => {
     setAvatarUrl(null)
+    // Remove from localStorage
+    if (user?.id) {
+      localStorage.removeItem(`avatar_${user.id}`)
+    }
     toast({
       title: "Profile picture removed",
       description: "Your profile picture has been removed",
@@ -157,7 +174,7 @@ export default function ProfileSettings() {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-6">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={avatarUrl || "/placeholder.svg"} />
+                {avatarUrl ? <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile picture" /> : null}
                 <AvatarFallback className="text-xl">
                   {user.name ? user.name.slice(0, 2).toUpperCase() : user.address.slice(2, 4).toUpperCase()}
                 </AvatarFallback>
