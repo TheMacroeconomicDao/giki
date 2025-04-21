@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Bell, ChevronDown, Menu, Moon, Search, Settings, Sun, User } from "lucide-react"
 import { useTheme } from "next-themes"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Sidebar } from "@/components/sidebar"
 import { useWeb3 } from "@/hooks/use-web3"
@@ -30,6 +30,23 @@ export default function Header() {
   const { address, connect, disconnect, isConnected } = useWeb3()
   const { user, isAuthenticated, login, logout, isLoading } = useAuth()
   const router = useRouter()
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Set avatar URL from user data or localStorage
+    if (user) {
+      if (user.avatarUrl) {
+        setAvatarUrl(user.avatarUrl)
+      } else {
+        const storedAvatarUrl = localStorage.getItem(`avatar_${user.id}`)
+        if (storedAvatarUrl) {
+          setAvatarUrl(storedAvatarUrl)
+        }
+      }
+    } else {
+      setAvatarUrl(null)
+    }
+  }, [user])
 
   const shortenAddress = (addr: string) => {
     return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : ""
@@ -120,7 +137,7 @@ export default function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder.svg" />
+                    {avatarUrl ? <AvatarImage src={avatarUrl || "/placeholder.svg"} alt="Profile" /> : null}
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {user?.name?.slice(0, 2).toUpperCase() || address?.slice(2, 4).toUpperCase()}
                     </AvatarFallback>

@@ -6,6 +6,7 @@ import { getUserByAddress, createUser, updateLastLogin } from "@/lib/user-servic
 import { createSession } from "@/lib/session-service"
 import { logger } from "@/lib/logger"
 
+// Ensure tokens are properly generated on the backend
 export async function POST(req: Request) {
   try {
     const { address, signature, message } = await req.json()

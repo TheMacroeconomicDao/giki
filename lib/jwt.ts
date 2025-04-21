@@ -20,6 +20,8 @@ export interface JWTPayload {
  * Sign a JWT token
  */
 export async function signJWT(payload: JWTPayload, expiresIn: string = ACCESS_TOKEN_EXPIRES_IN): Promise<string> {
+  const iat = Math.floor(Date.now() / 1000) // Current time in seconds
+
   const token = await new SignJWT({ ...payload })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -36,7 +38,7 @@ export async function verifyJWT<T>(token: string): Promise<T> {
   try {
     // Add clock tolerance to handle slight time differences
     const { payload } = await jwtVerify(token, JWT_SECRET, {
-      clockTolerance: 60, // 60 seconds of clock tolerance
+      clockTolerance: 120, // Increase to 120 seconds of clock tolerance for server time differences
     })
     return payload as unknown as T
   } catch (error) {

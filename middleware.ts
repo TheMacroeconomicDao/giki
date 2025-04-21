@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // Verify the access token
+    // Verify the access token with increased clock tolerance
     const payload = await verifyJWT<JWTPayload>(accessToken)
 
     if (payload.type !== "access") {

@@ -12,6 +12,7 @@ const mockUsers = {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     last_login: new Date().toISOString(),
+    avatarUrl: null,
     preferences: {
       language: "en",
       theme: "system",
@@ -35,6 +36,7 @@ export interface User {
     language: string
     theme: string
     email_notifications: boolean
+    avatar_url?: string | null
   }
 }
 
@@ -43,16 +45,18 @@ export interface UserPreferences {
   language: string
   theme: string
   email_notifications: boolean
+  avatar_url?: string | null
 }
 
 export async function getUserById(id: string): Promise<User | null> {
   try {
-    const user = await queryOne<User>(
+    const user = await queryOne<User & UserPreferences>(
       `
       SELECT u.*, 
              p.language, 
              p.theme, 
-             p.email_notifications
+             p.email_notifications,
+             p.avatar_url
       FROM users u
       LEFT JOIN user_preferences p ON u.id = p.user_id
       WHERE u.id = $1
@@ -71,10 +75,12 @@ export async function getUserById(id: string): Promise<User | null> {
     // Format the user object with preferences
     return {
       ...user,
+      avatarUrl: user.avatar_url || null,
       preferences: {
         language: user.language || "en",
         theme: user.theme || "system",
         email_notifications: user.email_notifications !== false,
+        avatar_url: user.avatar_url || null,
       },
     }
   } catch (error) {
@@ -91,12 +97,13 @@ export async function getUserById(id: string): Promise<User | null> {
 
 export async function getUserByAddress(address: string): Promise<User | null> {
   try {
-    const user = await queryOne<User>(
+    const user = await queryOne<User & UserPreferences>(
       `
       SELECT u.*, 
              p.language, 
              p.theme, 
-             p.email_notifications
+             p.email_notifications,
+             p.avatar_url
       FROM users u
       LEFT JOIN user_preferences p ON u.id = p.user_id
       WHERE LOWER(u.address) = LOWER($1)
@@ -109,10 +116,12 @@ export async function getUserByAddress(address: string): Promise<User | null> {
     // Format the user object with preferences
     return {
       ...user,
+      avatarUrl: user.avatar_url || null,
       preferences: {
         language: user.language || "en",
         theme: user.theme || "system",
         email_notifications: user.email_notifications !== false,
+        avatar_url: user.avatar_url || null,
       },
     }
   } catch (error) {
@@ -161,12 +170,7 @@ export async function createUser(userData: {
 export async function updateUser(id: string, data: Partial<User>): Promise<User | null> {
   try {
     // Update user data
-    if (
-      data.name !== undefined ||
-      data.email !== undefined ||
-      data.role !== undefined ||
-      data.avatarUrl !== undefined
-    ) {
+    if (data.name !== undefined || data.email !== undefined || data.role !== undefined) {
       const fields = []
       const values = []
       let paramIndex = 1
@@ -189,12 +193,6 @@ export async function updateUser(id: string, data: Partial<User>): Promise<User 
         paramIndex++
       }
 
-      if (data.avatarUrl !== undefined) {
-        fields.push(`avatar_url = $${paramIndex}`)
-        values.push(data.avatarUrl)
-        paramIndex++
-      }
-
       fields.push(`updated_at = NOW()`)
 
       if (fields.length > 0) {
@@ -211,25 +209,89 @@ export async function updateUser(id: string, data: Partial<User>): Promise<User 
     }
 
     // Update user preferences if provided
-    if (data.preferences) {
-      await query(
-        `
-        INSERT INTO user_preferences (user_id, language, theme, email_notifications)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (user_id) 
-        DO UPDATE SET 
-          language = EXCLUDED.language,
-          theme = EXCLUDED.theme,
-          email_notifications = EXCLUDED.email_notifications,
-          updated_at = NOW()
-      `,
-        [
-          id,
-          data.preferences.language || "en",
-          data.preferences.theme || "system",
-          data.preferences.email_notifications !== false,
-        ],
-      )
+    if (data.preferences || data.avatarUrl !== undefined) {
+      try {
+        // Check if user preferences exist
+        const prefExists = await queryOne(`SELECT 1 FROM user_preferences WHERE user_id = $1`, [id])
+        
+        if (prefExists) {
+          // Update existing preferences
+          const prefFields = []
+          const prefValues = [id] // Start with user ID as first parameter
+          let prefParamIndex = 2 // Start parameter index at 2 since user_id is $1
+          
+          // Handle preferences
+          if (data.preferences) {
+            if (data.preferences.language !== undefined) {
+              prefFields.push(`language = $${prefParamIndex}`)
+              prefValues.push(data.preferences.language || "en")
+              prefParamIndex++
+            }
+            
+            if (data.preferences.theme !== undefined) {
+              prefFields.push(`theme = $${prefParamIndex}`)
+              prefValues.push(data.preferences.theme || "system")
+              prefParamIndex++
+            }
+            
+            if (data.preferences.email_notifications !== undefined) {
+              prefFields.push(`email_notifications = $${prefParamIndex}`)
+              prefValues.push(data.preferences.email_notifications !== false)
+              prefParamIndex++
+            }
+            
+            if (data.preferences.avatar_url !== undefined) {
+              prefFields.push(`avatar_url = $${prefParamIndex}`)
+              prefValues.push(data.preferences.avatar_url)
+              prefParamIndex++
+            }
+          }
+          
+          // Handle avatarUrl separately if provided directly
+          if (data.avatarUrl !== undefined && !data.preferences?.avatar_url) {
+            prefFields.push(`avatar_url = $${prefParamIndex}`)
+            prefValues.push(data.avatarUrl)
+            prefParamIndex++
+          }
+          
+          if (prefFields.length > 0) {
+            prefFields.push(`updated_at = NOW()`)
+            
+            await query(
+              `
+              UPDATE user_preferences
+              SET ${prefFields.join(", ")}
+              WHERE user_id = $1
+              `,
+              prefValues
+            )
+          }
+        } else {
+          // Create new preferences with default values
+          await query(
+            `
+            INSERT INTO user_preferences (
+              user_id, 
+              language, 
+              theme, 
+              email_notifications,
+              avatar_url
+            )
+            VALUES ($1, $2, $3, $4, $5)
+            `,
+            [
+              id,
+              data.preferences?.language || "en",
+              data.preferences?.theme || "system",
+              data.preferences?.email_notifications !== false,
+              data.avatarUrl || data.preferences?.avatar_url || null,
+            ]
+          )
+        }
+      } catch (error) {
+        logger.error("Error updating user preferences:", error)
+        // Continue execution to return the user even if preferences update fails
+      }
     }
 
     // Get the updated user
@@ -290,12 +352,13 @@ export async function listUsers(
 
     // Get users with pagination
     const paginationParams = [...params, limit, offset]
-    const users = await query<User>(
+    const users = await query<User & UserPreferences>(
       `
       SELECT u.*, 
              p.language, 
              p.theme, 
-             p.email_notifications
+             p.email_notifications,
+             p.avatar_url
       FROM users u
       LEFT JOIN user_preferences p ON u.id = p.user_id
       ${whereClause}
@@ -308,10 +371,12 @@ export async function listUsers(
     // Format users with preferences
     const formattedUsers = users.map((user) => ({
       ...user,
+      avatarUrl: user.avatar_url || null,
       preferences: {
         language: user.language || "en",
         theme: user.theme || "system",
         email_notifications: user.email_notifications !== false,
+        avatar_url: user.avatar_url || null,
       },
     }))
 

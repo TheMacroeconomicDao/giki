@@ -1,55 +1,74 @@
+import { type NextRequest, NextResponse } from "next/server"
 import { getUserById } from "@/lib/user-service"
 
-// This is a mock implementation. In a real app, you would serve the image from your storage service.
-export async function GET(req: Request, { params }: { params: { userId: string } }) {
-  try {
-    const userId = params.userId
+export async function GET(request: NextRequest, { params }: { params: { userId: string } }): Promise<NextResponse> {
+  const userId = params.userId
 
-    // Get the user to check if they exist
+  try {
+    // Get the user to check if they have an avatar
     const user = await getUserById(userId)
 
     if (!user) {
-      return new Response("User not found", { status: 404 })
+      return new NextResponse("User not found", { status: 404 })
     }
 
-    // In a real implementation, you would fetch the image from your storage service
-    // For this example, we'll return a placeholder SVG with the user's initials
+    // For now, we'll generate a placeholder avatar based on the user's name or address
+    // In a real implementation, you would retrieve the actual image from storage
 
+    // Get initials for the avatar
     const initials = user.name ? user.name.slice(0, 2).toUpperCase() : user.address.slice(2, 4).toUpperCase()
 
+    // Generate a color based on the user ID (for consistent colors)
     const colors = [
-      "#2563EB", // blue-600
-      "#D97706", // amber-600
-      "#059669", // emerald-600
-      "#DC2626", // red-600
-      "#7C3AED", // violet-600
-      "#DB2777", // pink-600
+      "#1abc9c",
+      "#2ecc71",
+      "#3498db",
+      "#9b59b6",
+      "#34495e",
+      "#16a085",
+      "#27ae60",
+      "#2980b9",
+      "#8e44ad",
+      "#2c3e50",
+      "#f1c40f",
+      "#e67e22",
+      "#e74c3c",
+      "#ecf0f1",
+      "#95a5a6",
+      "#f39c12",
+      "#d35400",
+      "#c0392b",
+      "#bdc3c7",
+      "#7f8c8d",
     ]
 
-    // Use a deterministic color based on the user ID
-    const colorIndex = userId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length
+    const colorIndex = Number.parseInt(userId.substring(0, 8), 16) % colors.length
     const bgColor = colors[colorIndex]
 
+    // Create an SVG placeholder
     const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
         <rect width="200" height="200" fill="${bgColor}" />
         <text x="50%" y="50%" dy=".1em" 
-          font-family="Arial, sans-serif" 
-          font-size="80" 
-          fill="white" 
-          text-anchor="middle" 
-          dominant-baseline="middle">${initials}</text>
+              font-family="Arial, sans-serif" 
+              font-size="80" 
+              fill="white" 
+              text-anchor="middle" 
+              dominant-baseline="middle">
+          ${initials}
+        </text>
       </svg>
     `
 
-    return new Response(svg, {
+    // Return the SVG as an image
+    return new NextResponse(svg, {
       headers: {
         "Content-Type": "image/svg+xml",
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "public, max-age=86400", // Cache for 1 day
       },
     })
   } catch (error) {
     console.error("Error serving avatar:", error)
-    return new Response("Error serving avatar", { status: 500 })
+    return new NextResponse("Error serving avatar", { status: 500 })
   }
 }

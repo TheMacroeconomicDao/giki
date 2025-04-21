@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      // Verify the refresh token with clock tolerance
+      // Verify the refresh token with increased clock tolerance
       const payload = await verifyJWT<JWTPayload>(refreshToken)
 
       if (payload.type !== "refresh") {

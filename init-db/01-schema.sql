@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(255),
   email VARCHAR(255),
   role VARCHAR(50) NOT NULL DEFAULT 'viewer',
+  avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   last_login TIMESTAMP WITH TIME ZONE
@@ -87,14 +88,14 @@ ALTER TABLE pages ADD COLUMN IF NOT EXISTS search_vector tsvector;
 CREATE INDEX IF NOT EXISTS idx_pages_search ON pages USING GIN(search_vector);
 
 -- Create or replace function to update search vector
-CREATE OR REPLACE FUNCTION pages_search_vector_update() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION pages_search_vector_update() RETURNS trigger AS $
 BEGIN
   NEW.search_vector := 
     setweight(to_tsvector('english', COALESCE(NEW.title, '')), 'A') ||
     setweight(to_tsvector('english', COALESCE(NEW.content, '')), 'B');
   RETURN NEW;
 END
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
 
 -- Create trigger for search vector updates
 DROP TRIGGER IF EXISTS pages_search_vector_update ON pages;
