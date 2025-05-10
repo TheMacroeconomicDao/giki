@@ -1,5 +1,5 @@
 # Development Dockerfile with Bun
-FROM oven/bun:latest
+FROM oven/bun:1.0.30-slim
 
 # Create app directory
 WORKDIR /app
