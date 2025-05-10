@@ -1,4 +1,4 @@
-# Use Node.js 20 as the base image
+# Production Dockerfile
 FROM node:20-alpine AS base
 
 # Install dependencies only when needed
@@ -57,4 +57,4 @@ ENV HOSTNAME "0.0.0.0"
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
 # Start the server
-CMD ["node", "server.js"]
+CMD ["node", "server.js"] 

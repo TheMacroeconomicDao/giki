@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: .docker/dev/Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/giki
+      - JWT_SECRET=dev-secret-key-minimum-32-characters-long-123
+      - OPENAI_API_KEY=dummy-api-key-for-development
+      - GITHUB_TOKEN=dummy-github-token-for-development
+      - GITHUB_OWNER=testowner
+      - GITHUB_REPO=giki-backup
+    depends_on:
+      - db
+    networks:
+      - giki-dev-network
+
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=giki
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - giki-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  giki-dev-network:
+    driver: bridge
+
+volumes:
+  postgres-dev-data:
