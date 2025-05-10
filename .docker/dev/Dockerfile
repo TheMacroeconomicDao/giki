@@ -1,14 +1,14 @@
-# Development Dockerfile with Bun
-FROM oven/bun:1.0.30-slim
+# Development Dockerfile with Node.js
+FROM node:20-alpine
 
 # Create app directory
 WORKDIR /app
 
 # Only copy package files first to leverage Docker caching
-COPY package.json bun.lockb* ./
+COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN bun install
+RUN npm install
 
 # Expose port
 EXPOSE 3000
@@ -19,4 +19,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Start the development server
-CMD ["bun", "run", "dev"] 
+CMD ["npm", "run", "dev"] 
