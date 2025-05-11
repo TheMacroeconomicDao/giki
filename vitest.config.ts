@@ -6,7 +6,7 @@ import { resolve } from 'path';
 export default defineConfig({
   plugins: [
     react(),
-    tsconfigPaths()
+    tsconfigPaths({ projects: ['./tsconfig.test.json'] })
   ],
   test: {
     environment: 'jsdom',

@@ -1,9 +1,17 @@
 import React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MarkdownEditor } from '@/components/markdown-editor';
 import { useToast } from '@/hooks/use-toast';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Определяем типы для тестов
+declare global {
+  interface Window {
+    FileReader: any;
+  }
+}
 
 // Мокаем хук useToast
 vi.mock('@/hooks/use-toast', () => ({
@@ -25,7 +33,7 @@ describe('MarkdownEditor', () => {
     vi.clearAllMocks();
     
     // Настраиваем мок useToast
-    (useToast as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useToast as any).mockReturnValue({
       toast: vi.fn(),
     });
     
@@ -37,21 +45,24 @@ describe('MarkdownEditor', () => {
       },
     });
     
-    // Мокаем FileReader
-    Object.defineProperty(global, 'FileReader', {
-      value: class {
-        onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null = null;
-        
-        readAsDataURL() {
-          setTimeout(() => {
-            if (this.onload) {
-              this.onload({
-                target: { result: 'data:image/jpeg;base64,test' }
-              } as unknown as ProgressEvent<FileReader>);
-            }
-          }, 100);
-        }
+    // Мокаем FileReader с использованием any для обхода проблем типизации
+    class MockFileReader {
+      onload: any = null;
+      
+      readAsDataURL() {
+        setTimeout(() => {
+          if (this.onload) {
+            this.onload({
+              target: { result: 'data:image/jpeg;base64,test' }
+            });
+          }
+        }, 100);
       }
+    }
+    
+    Object.defineProperty(window, 'FileReader', {
+      value: MockFileReader,
+      writable: true
     });
   });
   
@@ -176,7 +187,7 @@ describe('MarkdownEditor', () => {
   
   it('validates image file type during upload', async () => {
     const mockToast = vi.fn();
-    (useToast as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useToast as any).mockReturnValue({
       toast: mockToast,
     });
     
@@ -201,7 +212,7 @@ describe('MarkdownEditor', () => {
   
   it('validates image file size during upload', async () => {
     const mockToast = vi.fn();
-    (useToast as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useToast as any).mockReturnValue({
       toast: mockToast,
     });
     
@@ -227,12 +238,12 @@ describe('MarkdownEditor', () => {
   
   it('handles API errors during image upload', async () => {
     const mockToast = vi.fn();
-    (useToast as ReturnType<typeof vi.fn>).mockReturnValue({
+    (useToast as any).mockReturnValue({
       toast: mockToast,
     });
     
     // Мокаем ошибку fetch
-    (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() =>
+    (global.fetch as any).mockImplementationOnce(() =>
       Promise.resolve({
         ok: false,
         json: () => Promise.resolve({ error: 'Upload failed' }),
