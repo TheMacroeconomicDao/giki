@@ -24,11 +24,12 @@ export async function PATCH(req: NextRequest) {
       return errorResponse("No update data provided")
     }
 
-    // Only allow updating name, email, and preferences
+    // Only allow updating name, email, preferences, and avatarUrl
     const allowedUpdates = {
       name: data.name,
       email: data.email,
       preferences: data.preferences,
+      avatarUrl: data.avatarUrl,
     }
 
     // Update user

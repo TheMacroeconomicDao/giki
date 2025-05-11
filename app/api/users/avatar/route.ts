@@ -40,11 +40,9 @@ export async function POST(req: Request) {
       const base64 = buffer.toString("base64")
       const dataUrl = `data:${file.type};base64,${base64}`
 
-      // Update the user with the avatar URL
+      // Update the user with the avatar URL - используем прямое поле avatarUrl вместо preferences.avatar_url
       const updatedUser = await updateUser(userId, {
-        preferences: {
-          avatar_url: dataUrl
-        } as any
+        avatarUrl: dataUrl
       })
 
       if (!updatedUser) {

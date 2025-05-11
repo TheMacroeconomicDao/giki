@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger"
 export async function GET(req: Request) {
   try {
     // Get the access token from cookies
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const accessToken = cookieStore.get("access_token")?.value
 
     if (!accessToken) {

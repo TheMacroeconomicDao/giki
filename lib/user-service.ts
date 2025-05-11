@@ -36,7 +36,6 @@ export interface User {
     language: string
     theme: string
     email_notifications: boolean
-    avatar_url?: string | null
   }
 }
 
@@ -55,8 +54,7 @@ export async function getUserById(id: string): Promise<User | null> {
       SELECT u.*, 
              p.language, 
              p.theme, 
-             p.email_notifications,
-             p.avatar_url
+             p.email_notifications
       FROM users u
       LEFT JOIN user_preferences p ON u.id = p.user_id
       WHERE u.id = $1
@@ -102,8 +100,7 @@ export async function getUserByAddress(address: string): Promise<User | null> {
       SELECT u.*, 
              p.language, 
              p.theme, 
-             p.email_notifications,
-             p.avatar_url
+             p.email_notifications
       FROM users u
       LEFT JOIN user_preferences p ON u.id = p.user_id
       WHERE LOWER(u.address) = LOWER($1)
@@ -170,7 +167,7 @@ export async function createUser(userData: {
 export async function updateUser(id: string, data: Partial<User>): Promise<User | null> {
   try {
     // Update user data
-    if (data.name !== undefined || data.email !== undefined || data.role !== undefined) {
+    if (data.name !== undefined || data.email !== undefined || data.role !== undefined || data.avatarUrl !== undefined) {
       const fields = []
       const values = []
       let paramIndex = 1
@@ -190,6 +187,12 @@ export async function updateUser(id: string, data: Partial<User>): Promise<User 
       if (data.role !== undefined) {
         fields.push(`role = $${paramIndex}`)
         values.push(data.role)
+        paramIndex++
+      }
+      
+      if (data.avatarUrl !== undefined) {
+        fields.push(`avatar_url = $${paramIndex}`)
+        values.push(data.avatarUrl)
         paramIndex++
       }
 
@@ -237,12 +240,6 @@ export async function updateUser(id: string, data: Partial<User>): Promise<User 
             if (data.preferences.email_notifications !== undefined) {
               prefFields.push(`email_notifications = $${prefParamIndex}`)
               prefValues.push(data.preferences.email_notifications !== false)
-              prefParamIndex++
-            }
-            
-            if (data.preferences.avatar_url !== undefined) {
-              prefFields.push(`avatar_url = $${prefParamIndex}`)
-              prefValues.push(data.preferences.avatar_url)
               prefParamIndex++
             }
           }
