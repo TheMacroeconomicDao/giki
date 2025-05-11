@@ -244,12 +244,7 @@ export async function updateUser(id: string, data: Partial<User>): Promise<User 
             }
           }
           
-          // Handle avatarUrl separately if provided directly
-          if (data.avatarUrl !== undefined && !data.preferences?.avatar_url) {
-            prefFields.push(`avatar_url = $${prefParamIndex}`)
-            prefValues.push(data.avatarUrl)
-            prefParamIndex++
-          }
+          // Уже не обновляем avatar_url в user_preferences, так как он теперь в таблице users
           
           if (prefFields.length > 0) {
             prefFields.push(`updated_at = NOW()`)
@@ -271,17 +266,15 @@ export async function updateUser(id: string, data: Partial<User>): Promise<User 
               user_id, 
               language, 
               theme, 
-              email_notifications,
-              avatar_url
+              email_notifications
             )
-            VALUES ($1, $2, $3, $4, $5)
+            VALUES ($1, $2, $3, $4)
             `,
             [
               id,
               data.preferences?.language || "en",
               data.preferences?.theme || "system",
               data.preferences?.email_notifications !== false,
-              data.avatarUrl || data.preferences?.avatar_url || null,
             ]
           )
         }
@@ -354,8 +347,7 @@ export async function listUsers(
       SELECT u.*, 
              p.language, 
              p.theme, 
-             p.email_notifications,
-             p.avatar_url
+             p.email_notifications
       FROM users u
       LEFT JOIN user_preferences p ON u.id = p.user_id
       ${whereClause}
