@@ -72,17 +72,17 @@ export async function POST(req: Request) {
     }
 
     // Set cookies
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
 
     // Set access token cookie (short-lived)
-    cookieStore.set(
+    await cookieStore.set(
       "access_token",
       accessToken,
       getSecureCookieOptions(15 * 60), // 15 minutes
     )
 
     // Set refresh token cookie (long-lived)
-    cookieStore.set(
+    await cookieStore.set(
       "refresh_token",
       refreshToken,
       getSecureCookieOptions(7 * 24 * 60 * 60), // 7 days
