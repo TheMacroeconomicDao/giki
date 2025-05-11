@@ -1,0 +1,43 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Устанавливаем зависимости для Playwright
+RUN apk add --no-cache \
+    chromium \
+    firefox \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    py3-pip \
+    build-base \
+    g++ \
+    libstdc++ \
+    jpeg-dev \
+    zlib-dev \
+    libpng-dev
+
+# Устанавливаем переменные окружения для Playwright
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+# Копируем package.json и package-lock.json
+COPY package.json package-lock.json ./
+
+# Устанавливаем зависимости
+RUN npm ci
+
+# Копируем остальные файлы проекта
+COPY . .
+
+# Запускаем скрипт для компиляции TypeScript 
+RUN npm run build
+
+# Экспозим порт
+EXPOSE 3000
+
+# Команда запуска тестов по умолчанию
+CMD ["npm", "run", "test"] 
