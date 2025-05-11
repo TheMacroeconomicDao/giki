@@ -116,7 +116,6 @@ GITHUB_REPO=giki-backup
 # Server
 PORT=3000
 ```
-
 # Giki.js Roadmap
 
 ## Current Version (v0.1.0-alpha)
@@ -201,8 +200,6 @@ For each version we track:
 - Test coverage
 - Performance metrics
 - User feedback 
-
-
 ## License
 
 MIT

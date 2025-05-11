@@ -1,116 +1,156 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Clock, Globe, Users } from "lucide-react"
+import { Clock, Globe, Users, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { formatDistanceToNow } from "date-fns"
+import { Skeleton } from "@/components/ui/skeleton"
+
+interface Author {
+  id: string
+  name: string | null
+  address: string
+}
 
 interface PageItem {
   id: string
   title: string
-  description: string
-  author: {
-    name: string
-    avatar: string
-    address: string
-  }
+  content: string
+  visibility: "public" | "community" | "private"
+  author: Author
+  createdAt: string
   updatedAt: string
-  visibility: "public" | "community"
-  path: string
+  views: number
 }
 
-const recentPages: PageItem[] = [
-  {
-    id: "1",
-    title: "Getting Started with Giki.js",
-    description: "Learn how to create your first wiki page and navigate the platform",
-    author: {
-      name: "Admin",
-      avatar: "",
-      address: "0x1234",
-    },
-    updatedAt: "2 hours ago",
-    visibility: "public",
-    path: "/explore/public/getting-started",
-  },
-  {
-    id: "2",
-    title: "AI Translation Guide",
-    description: "How to use the one-click translation feature to create multilingual content",
-    author: {
-      name: "Sarah",
-      avatar: "",
-      address: "0x5678",
-    },
-    updatedAt: "5 hours ago",
-    visibility: "public",
-    path: "/explore/public/ai-translation",
-  },
-  {
-    id: "3",
-    title: "Development Roadmap",
-    description: "Upcoming features and improvements planned for Giki.js",
-    author: {
-      name: "Alex",
-      avatar: "",
-      address: "0x9abc",
-    },
-    updatedAt: "1 day ago",
-    visibility: "community",
-    path: "/explore/community/roadmap",
-  },
-  {
-    id: "4",
-    title: "Web3 Authentication Setup",
-    description: "How to connect your crypto wallet and sign in securely",
-    author: {
-      name: "Mike",
-      avatar: "",
-      address: "0xdef0",
-    },
-    updatedAt: "2 days ago",
-    visibility: "public",
-    path: "/explore/public/web3-auth",
-  },
-]
-
 export function RecentPages() {
+  const [pages, setPages] = useState<PageItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchRecentPages() {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await fetch('/api/pages?limit=4')
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch recent pages')
+        }
+        
+        const data = await response.json()
+        
+        if (data.success && data.data.pages) {
+          setPages(data.data.pages)
+        } else {
+          throw new Error(data.error || 'Failed to load pages')
+        }
+      } catch (err) {
+        console.error('Error fetching recent pages:', err)
+        setError((err as Error).message || 'Failed to load recent pages')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchRecentPages()
+  }, [])
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-5 w-2/3 mb-2" />
+              <Skeleton className="h-4 w-full" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="rounded-md bg-destructive/10 p-6 text-center">
+        <AlertCircle className="h-6 w-6 text-destructive mx-auto mb-2" />
+        <p className="text-destructive">{error}</p>
+      </div>
+    )
+  }
+
+  // No pages state
+  if (pages.length === 0) {
+    return (
+      <div className="text-center p-6 border rounded-md">
+        <p className="text-muted-foreground">No pages found</p>
+      </div>
+    )
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {recentPages.map((page) => (
-        <Card key={page.id}>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-lg">
-                  <Link href={page.path} className="hover:underline">
-                    {page.title}
-                  </Link>
-                </CardTitle>
-                <CardDescription className="line-clamp-2 mt-1">{page.description}</CardDescription>
+      {pages.map((page) => {
+        // Extract a short description from content
+        const description = page.content
+          .replace(/[#*`]/g, '') // Remove markdown characters
+          .slice(0, 120) + (page.content.length > 120 ? '...' : '')
+          
+        return (
+          <Card key={page.id}>
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-lg">
+                    <Link href={`/pages/${page.id}`} className="hover:underline">
+                      {page.title}
+                    </Link>
+                  </CardTitle>
+                  <CardDescription className="line-clamp-2 mt-1">{description}</CardDescription>
+                </div>
+                {page.visibility === "public" ? (
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                )}
               </div>
-              {page.visibility === "public" ? (
-                <Globe className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <Users className="h-4 w-4 text-muted-foreground" />
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={page.author.avatar || "/placeholder.svg"} />
-                  <AvatarFallback className="text-xs">{page.author.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <span className="text-muted-foreground">{page.author.name}</span>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={`https://avatar.vercel.sh/${page.author.address}`} />
+                    <AvatarFallback className="text-xs">
+                      {(page.author.name || page.author.address.slice(0, 6)).slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-muted-foreground">{page.author.name || page.author.address.slice(0, 6)}</span>
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>{formatDistanceToNow(new Date(page.updatedAt), { addSuffix: true })}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>{page.updatedAt}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        )
+      })}
     </div>
   )
 }

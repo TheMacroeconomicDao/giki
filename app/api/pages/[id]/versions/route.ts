@@ -1,11 +1,12 @@
-import type { NextRequest } from "next/server"
-import { getPageById, getPageVersions } from "@/lib/page-service"
+import { NextResponse } from "next/server"
+import { getPageVersions, getPageById } from "@/lib/page-service"
 import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
+import { logger } from "@/lib/logger"
 
-// GET /api/pages/[id]/versions - Get page versions
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+// GET /api/pages/[id]/versions - Get all versions of a page
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    // Get page by ID
+    // Get the page to check permissions
     const page = await getPageById(params.id)
 
     if (!page) {
@@ -15,21 +16,33 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     // Authenticate the request
     const auth = await authenticateRequest(req)
 
-    // Check if the user can access this page
+    // Check if the user can access this page's versions
     if (page.visibility !== "public" && !auth.authenticated) {
-      return errorResponse("Authentication required to access this page", 401)
+      return errorResponse("Authentication required to access version history", 401)
     }
 
     // If the page is private, only admins and the author can view versions
     if (page.visibility === "private" && auth.user?.role !== "admin" && auth.user?.sub !== page.author.id) {
-      return errorResponse("You don't have permission to access this page's versions", 403)
+      return errorResponse("You don't have permission to access this page's version history", 403)
     }
 
-    // Get page versions
+    // Get versions
     const versions = await getPageVersions(params.id)
 
-    return successResponse({ versions })
+    // Format data with author info
+    const formattedVersions = versions.map(version => ({
+      id: version.id,
+      pageId: version.page_id,
+      content: version.content,
+      createdAt: version.created_at,
+      createdBy: version.created_by,
+      // In a real implementation, you would fetch author info for each version
+      authorName: page.author.name // For simplicity, use page.author info
+    }))
+
+    return successResponse({ versions: formattedVersions })
   } catch (error) {
-    return handleApiError(error, "Failed to get page versions")
+    logger.error("Error getting page versions:", error as Error)
+    return handleApiError(error, "Failed to get version history")
   }
 }

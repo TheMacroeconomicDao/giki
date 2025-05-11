@@ -1,60 +1,49 @@
-# Production Dockerfile
-FROM node:20-alpine AS base
+# Production Dockerfile with Node.js
+FROM node:20-alpine AS builder
 
-# Install dependencies only when needed
-FROM base AS deps
+# Install pnpm
+RUN npm install -g pnpm
+
+# Create app directory
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* ./
-RUN npm ci
+# Only copy package files first to leverage Docker caching
+COPY package.json pnpm-lock.yaml* ./
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy application code
 COPY . .
 
-# Set environment variables
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
-
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# Production stage
+FROM node:20-alpine AS runner
+
 WORKDIR /app
 
-# Set environment variables
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+# Install pnpm
+RUN npm install -g pnpm
 
-# Create a non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Copy the build output and necessary files
+# Copy necessary files from builder stage
+COPY --from=builder /app/package.json .
+COPY --from=builder /app/pnpm-lock.yaml* .
+COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/next.config.mjs ./
 
-# Copy scripts and configuration files
-COPY --from=builder /app/scripts ./scripts
-COPY --from=builder /app/init-db ./init-db
+# Install production dependencies only
+RUN pnpm install --frozen-lockfile --production
 
-# Set the correct permissions
-USER nextjs
-
-# Expose the port
+# Expose port
 EXPOSE 3000
 
-# Set the environment variable for the server
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
-
-# Start the server
-CMD ["node", "server.js"] 
+# Start the application
+CMD ["pnpm", "start"] 

@@ -4,14 +4,18 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { History, ArrowLeft, ArrowRight, RotateCcw } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { History, ArrowLeft, ArrowRight, RotateCcw, AlertCircle } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { Diff } from "react-diff-viewer-continued"
+import { useToast } from "@/hooks/use-toast"
 
 interface Version {
   id: string
   content: string
   createdAt: string
+  createdBy: string
+  authorName?: string
 }
 
 interface VersionHistoryProps {
@@ -26,46 +30,39 @@ export function VersionHistory({ pageId, currentContent, onRestore }: VersionHis
   const [error, setError] = useState<string | null>(null)
   const [selectedVersionIndex, setSelectedVersionIndex] = useState<number | null>(null)
   const [showDiff, setShowDiff] = useState(false)
+  const { toast } = useToast()
 
   // Fetch versions from API
   useEffect(() => {
     const fetchVersions = async () => {
       try {
         setLoading(true)
-        // In a real app, this would be an API call
-        // const response = await fetch(`/api/pages/${pageId}/versions`)
-        // const data = await response.json()
-        // setVersions(data.versions)
-
-        // Mock data for demonstration
-        setVersions([
-          {
-            id: "3",
-            content:
-              "# Getting Started with Giki.js\n\nWelcome to Giki.js! This is the latest version with more details.\n\n## Features\n\n- Markdown support\n- Version history\n- Translations",
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-          },
-          {
-            id: "2",
-            content:
-              "# Getting Started with Giki.js\n\nWelcome to Giki.js! This is the second version with some updates.",
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-          },
-          {
-            id: "1",
-            content: "# Getting Started\n\nWelcome to Giki.js!",
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
-          },
-        ])
+        setError(null)
+        
+        const response = await fetch(`/api/pages/${pageId}/versions`)
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch version history')
+        }
+        
+        const data = await response.json()
+        
+        if (data.success && data.data && data.data.versions) {
+          setVersions(data.data.versions)
+        } else {
+          throw new Error(data.error || 'Failed to load version history')
+        }
       } catch (err) {
-        setError("Failed to load version history")
-        console.error(err)
+        console.error('Error fetching versions:', err)
+        setError((err as Error).message || 'Failed to load version history')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchVersions()
+    if (pageId) {
+      fetchVersions()
+    }
   }, [pageId])
 
   const handleVersionSelect = (index: number) => {
@@ -73,11 +70,34 @@ export function VersionHistory({ pageId, currentContent, onRestore }: VersionHis
     setShowDiff(true)
   }
 
-  const handleRestore = () => {
+  const handleRestore = async () => {
     if (selectedVersionIndex !== null) {
-      onRestore(versions[selectedVersionIndex].content)
-      setShowDiff(false)
-      setSelectedVersionIndex(null)
+      try {
+        // Show loading toast
+        toast({
+          title: "Restoring version...",
+          description: "Please wait while the content is being restored"
+        })
+        
+        // In a real implementation, you would call an API to create a new version
+        // that restores this content, but for now we'll just use the onRestore callback
+        onRestore(versions[selectedVersionIndex].content)
+        
+        toast({
+          title: "Version restored",
+          description: "The selected version has been restored successfully"
+        })
+        
+        setShowDiff(false)
+        setSelectedVersionIndex(null)
+      } catch (error) {
+        console.error('Error restoring version:', error)
+        toast({
+          title: "Restore failed",
+          description: "There was an error restoring this version",
+          variant: "destructive"
+        })
+      }
     }
   }
 
@@ -91,12 +111,52 @@ export function VersionHistory({ pageId, currentContent, onRestore }: VersionHis
     }
   }
 
+  // Loading state
   if (loading) {
-    return <div>Loading version history...</div>
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <Skeleton className="h-6 w-48 mb-2" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <Skeleton className="h-6 w-80" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[400px] w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
+  // Error state
   if (error) {
-    return <div className="text-red-500">{error}</div>
+    return (
+      <div className="rounded-md bg-destructive/10 p-6 text-center">
+        <AlertCircle className="h-6 w-6 text-destructive mx-auto mb-2" />
+        <p className="text-destructive">{error}</p>
+      </div>
+    )
+  }
+
+  // No versions state
+  if (versions.length === 0) {
+    return (
+      <div className="text-center p-6 border rounded-md">
+        <History className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+        <p className="text-muted-foreground">No version history available</p>
+      </div>
+    )
   }
 
   return (
@@ -110,28 +170,29 @@ export function VersionHistory({ pageId, currentContent, onRestore }: VersionHis
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px]">
-            {versions.length === 0 ? (
-              <p className="text-muted-foreground">No previous versions</p>
-            ) : (
-              <div className="space-y-2">
-                {versions.map((version, index) => (
-                  <div
-                    key={version.id}
-                    className={`p-3 rounded-md cursor-pointer ${
-                      selectedVersionIndex === index ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                    }`}
-                    onClick={() => handleVersionSelect(index)}
-                  >
-                    <div className="font-medium">Version {versions.length - index}</div>
-                    <div className="text-sm opacity-80">
-                      {formatDistanceToNow(new Date(version.createdAt), {
-                        addSuffix: true,
-                      })}
-                    </div>
+            <div className="space-y-2">
+              {versions.map((version, index) => (
+                <div
+                  key={version.id}
+                  className={`p-3 rounded-md cursor-pointer ${
+                    selectedVersionIndex === index ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                  }`}
+                  onClick={() => handleVersionSelect(index)}
+                >
+                  <div className="font-medium">Version {versions.length - index}</div>
+                  <div className="text-sm opacity-80">
+                    {formatDistanceToNow(new Date(version.createdAt), {
+                      addSuffix: true,
+                    })}
                   </div>
-                ))}
-              </div>
-            )}
+                  {version.authorName && (
+                    <div className="text-xs opacity-70 mt-1">
+                      By {version.authorName}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </ScrollArea>
         </CardContent>
       </Card>

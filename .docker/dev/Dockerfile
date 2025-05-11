@@ -4,11 +4,14 @@ FROM node:20-alpine
 # Create app directory
 WORKDIR /app
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Only copy package files first to leverage Docker caching
-COPY package.json package-lock.json* ./
+COPY package.json pnpm-lock.yaml* ./
 
 # Install dependencies
-RUN npm install
+RUN pnpm install
 
 # Expose port
 EXPOSE 3000
@@ -19,4 +22,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Start the development server
-CMD ["npm", "run", "dev"] 
+CMD ["pnpm", "run", "dev"] 
