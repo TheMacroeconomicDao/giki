@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSettingsStore } from '@/entities/settings';
 import { useAuthStore } from '@/features/auth';
-import { toast } from '@/shared/ui/use-toast';
+import { useToast, toast } from '@/shared/ui/use-toast';
 import { SettingsPageState, SettingsTab } from './types';
 
 /**
