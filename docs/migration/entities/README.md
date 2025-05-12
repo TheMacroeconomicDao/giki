@@ -12,7 +12,7 @@
 | User     | 100%     | ✅ Все компоненты реализованы             |
 | Page     | 100%     | ✅ Все компоненты реализованы             |
 | Version  | 100%     | ✅ Все компоненты реализованы             |
-| Translation | 0%    | ⬜ Не начато                             |
+| Translation | 100%  | ✅ Все компоненты реализованы             |
 | Settings | 0%       | ⬜ Не начато                             |
 
 ## Содержимое слоя
@@ -36,10 +36,10 @@
   - ✅ UI-компоненты (VersionCard, VersionDiff, VersionInfo)
 
 ### entities/translation
-- ⬜ [Компоненты перевода](./translation.md)
-  - ⬜ Модель (types.ts, store.ts)
-  - ⬜ API (translationApi.ts)
-  - ⬜ UI-компоненты (TranslationSelector, TranslationBadge)
+- ✅ [Компоненты перевода](./translation.md)
+  - ✅ Модель (types.ts, store.ts)
+  - ✅ API (translationApi.ts)
+  - ✅ UI-компоненты (TranslationSelector, TranslationBadge)
 
 ### entities/settings
 - ⬜ [Компоненты настроек](./settings.md)
@@ -59,5 +59,6 @@
 - ✅ Завершить перенос сущности User
 - ✅ Реализовать сущность Page полностью
 - ✅ Реализовать сущность Version полностью
-- ⬜ Начать перенос сущности Translation
+- ✅ Реализовать сущность Translation полностью
+- ⬜ Реализовать сущность Settings
 - ⬜ Обеспечить связь между сущностями через модели 
