@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server"
-import { getPage, updatePage, deletePage } from "@/src/api/pages"
+import { getPage, updatePage, deletePage } from "@/api/pages"
 
 // GET /api/pages/[id] - Get page by ID
 export const GET = async (req: NextRequest, { params }: { params: { id: string } }) => getPage(req, { params })

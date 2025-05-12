@@ -1,4 +1,4 @@
-import { SystemSettings, UserSettings } from '@/entities/settings';
+import { SystemSettings as SystemSettingsEntity, UserSettings as UserSettingsEntity, UISettings, SystemSettings as SimpleSystemSettings } from '@/entities/settings';
 
 /**
  * Состояние компонента страницы настроек
@@ -7,9 +7,8 @@ export interface SettingsPageState {
   loading: boolean;
   saving: boolean;
   error: string | null;
-  systemSettings: SystemSettings | null;
-  userSettings: UserSettings | null;
-  isAdmin: boolean;
+  systemSettings: SimpleSystemSettings;
+  userSettings: UISettings;
 }
 
 /**
@@ -22,4 +21,4 @@ export interface SettingsPageProps {
 /**
  * Вкладки настроек
  */
-export type SettingsTab = 'profile' | 'appearance' | 'notifications' | 'system' | 'api'; 
+export type SettingsTab = 'profile' | 'appearance' | 'notifications' | 'system' | 'api' | 'general'; 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { verifyJWT, type JWTPayload } from "@/lib/jwt"
-import { logger } from "@/lib/logger"
+import { verifyJWT, type JWTPayload } from "@/shared/lib/jwt"
+import { logger } from "@/shared/lib/logger"
 
 // Paths that require authentication
 const protectedPaths = ["/admin", "/dashboard", "/settings", "/create"]

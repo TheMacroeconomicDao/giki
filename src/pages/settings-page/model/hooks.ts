@@ -1,101 +1,95 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSettingsStore } from '@/entities/settings';
 import { useAuthStore } from '@/features/auth';
-import { useToast, toast } from '@/shared/ui/use-toast';
+import { toast } from '@/shared/ui/use-toast';
 import { SettingsPageState, SettingsTab } from './types';
+import type { SystemSettings, UserSettings } from '@/entities/settings'; // Импортируем типы
 
 /**
  * Хук для управления состоянием страницы настроек
  */
 export const useSettingsPage = (): [
-  SettingsPageState, 
+  Omit<SettingsPageState, 'isAdmin'> & { activeTab: SettingsTab, isAdmin: boolean }, // Добавляем activeTab и isAdmin в возвращаемый тип
   {
-    updateSystemSetting: (key: string, value: string) => void;
-    updateUserSetting: (key: string, value: string | boolean | number) => void;
-    saveSettings: () => Promise<boolean>;
-  },
-  SettingsTab,
-  (tab: SettingsTab) => void
+    setActiveTab: (tab: SettingsTab) => void;
+    updateSystemSetting: <K extends keyof SystemSettings>(key: K, value: SystemSettings[K]) => void; // Используем SystemSettings
+    updateUserSetting: <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => void; // Используем UserSettings
+    handleSaveSettings: () => Promise<boolean>;
+  }
 ] => {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
-  const { systemSettings, userSettings, updateSystemSetting, updateUserSetting, saveSettings } = useSettingsStore();
-  const { user } = useAuthStore();
-  
-  const [state, setState] = useState<SettingsPageState>({
-    loading: true,
+  const { settings: initialSettings, isLoading: settingsLoading, updateSetting: updateGlobalSetting } = useSettingsStore();
+  const { user, status: authStatus } = useAuthStore();
+
+  const [activeTab, setActiveTab] = useState<SettingsTab>('general'); // activeTab как отдельное состояние
+  const isAdmin = user?.role === 'admin';
+
+  const [state, setState] = useState<Omit<SettingsPageState, 'isAdmin'>>({
+    loading: settingsLoading || authStatus === 'loading',
     saving: false,
     error: null,
-    systemSettings: null,
-    userSettings: null,
-    isAdmin: false,
+    systemSettings: initialSettings.system,
+    userSettings: initialSettings.ui,
   });
 
-  // Загрузка настроек
   useEffect(() => {
     setState(prev => ({
       ...prev,
-      systemSettings,
-      userSettings,
-      isAdmin: user?.role === 'admin',
-      loading: false,
+      loading: settingsLoading || authStatus === 'loading',
+      systemSettings: initialSettings.system,
+      userSettings: initialSettings.ui,
     }));
-  }, [systemSettings, userSettings, user]);
+  }, [initialSettings, settingsLoading, authStatus]);
 
-  // Обновление системной настройки
-  const handleUpdateSystemSetting = useCallback((key: string, value: string) => {
-    if (!state.isAdmin) {
-      toast({
-        title: 'Ошибка доступа',
-        description: 'У вас нет прав для изменения системных настроек',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    updateSystemSetting(key, value);
-  }, [state.isAdmin, updateSystemSetting]);
+  const updateSystemSetting = useCallback(<K extends keyof SystemSettings>(key: K, value: SystemSettings[K]) => {
+    setState(prev => ({
+      ...prev,
+      systemSettings: { ...prev.systemSettings, [key]: value }
+    }));
+  }, []);
 
-  // Обновление пользовательской настройки
-  const handleUpdateUserSetting = useCallback((key: string, value: string | boolean | number) => {
-    updateUserSetting(key, value);
-  }, [updateUserSetting]);
+  const updateUserSetting = useCallback(<K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
+    setState(prev => ({
+      ...prev,
+      userSettings: { ...prev.userSettings, [key]: value }
+    }));
+  }, []);
 
-  // Сохранение настроек
   const handleSaveSettings = useCallback(async (): Promise<boolean> => {
-    try {
-      setState(prev => ({ ...prev, saving: true }));
-      
-      await saveSettings();
-      
-      toast({
-        title: 'Настройки сохранены',
-        description: 'Ваши настройки успешно сохранены',
-      });
-      
-      setState(prev => ({ ...prev, saving: false }));
-      return true;
-    } catch (error) {
-      console.error('Ошибка сохранения настроек:', error);
-      
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить настройки',
-        variant: 'destructive',
-      });
-      
-      setState(prev => ({ ...prev, saving: false }));
+    if (!user) {
+      toast.error('Пожалуйста, войдите в систему для сохранения настроек.');
       return false;
     }
-  }, [saveSettings]);
+
+    setState(prev => ({ ...prev, saving: true, error: null }));
+    try {
+      // Обновляем глобальный стор
+      updateGlobalSetting('system', state.systemSettings); // Передаем весь объект
+      updateGlobalSetting('ui', state.userSettings);       // Передаем весь объект
+
+      // TODO: Реализовать вызовы API для сохранения настроек на бэкенде
+      console.log('Saving User Settings to backend:', state.userSettings);
+      console.log('Saving System Settings to backend:', state.systemSettings);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Имитация API
+
+      toast.success('Настройки успешно сохранены!');
+      setState(prev => ({ ...prev, saving: false }));
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка сохранения';
+      console.error('Ошибка сохранения настроек:', err);
+      toast.error(`Не удалось сохранить настройки: ${errorMessage}`);
+      setState(prev => ({ ...prev, saving: false, error: errorMessage }));
+      return false;
+    }
+  }, [user, state.userSettings, state.systemSettings, updateGlobalSetting, isAdmin]);
 
   return [
-    state,
+    { ...state, activeTab, isAdmin }, // Возвращаем объединенное состояние
     {
-      updateSystemSetting: handleUpdateSystemSetting,
-      updateUserSetting: handleUpdateUserSetting,
-      saveSettings: handleSaveSettings,
-    },
-    activeTab,
-    setActiveTab
+      setActiveTab,
+      updateSystemSetting,
+      updateUserSetting,
+      handleSaveSettings,
+    }
   ];
 }; 
