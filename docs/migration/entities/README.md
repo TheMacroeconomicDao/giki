@@ -13,7 +13,7 @@
 | Page     | 100%     | ✅ Все компоненты реализованы             |
 | Version  | 100%     | ✅ Все компоненты реализованы             |
 | Translation | 100%  | ✅ Все компоненты реализованы             |
-| Settings | 0%       | ⬜ Не начато                             |
+| Settings | 100%     | ✅ Все компоненты реализованы             |
 
 ## Содержимое слоя
 
@@ -42,10 +42,10 @@
   - ✅ UI-компоненты (TranslationSelector, TranslationBadge)
 
 ### entities/settings
-- ⬜ [Компоненты настроек](./settings.md)
-  - ⬜ Модель (types.ts, store.ts)
-  - ⬜ API (settingsApi.ts)
-  - ⬜ UI-компоненты (SettingsCard, SettingsSection)
+- ✅ [Компоненты настроек](./settings.md)
+  - ✅ Модель (types.ts, store.ts)
+  - ✅ API (settingsApi.ts)
+  - ✅ UI-компоненты (SettingsCard, SettingsSection)
 
 ## Принципы реализации
 
@@ -60,5 +60,5 @@
 - ✅ Реализовать сущность Page полностью
 - ✅ Реализовать сущность Version полностью
 - ✅ Реализовать сущность Translation полностью
-- ⬜ Реализовать сущность Settings
+- ✅ Реализовать сущность Settings
 - ⬜ Обеспечить связь между сущностями через модели 
