@@ -1,4 +1,4 @@
-import { createStore } from '@/shared/lib/zustand/createStore';
+import { createStore } from '@/shared/lib/store/createStore';
 import type { Page, PageWithAuthor, PageWithDetails } from './types';
 
 /**
