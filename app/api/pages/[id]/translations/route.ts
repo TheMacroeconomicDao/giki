@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server"
-import { getPageById, getPageTranslations, addTranslation } from "@/lib/page-service"
-import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
+import { getPageById, getPageTranslations, addTranslation } from "@/entities/page"
+import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
 
 // GET /api/pages/[id]/translations - Get page translations
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {

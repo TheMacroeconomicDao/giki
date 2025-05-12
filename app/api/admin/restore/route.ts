@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server"
-import { sql } from "@/lib/db"
-import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
-import { logger } from "@/lib/logger"
+import { sql } from "@/shared/lib/db"
+import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
+import { logger } from "@/shared/lib/logger"
 
 // POST /api/admin/restore - Restore database from JSON backup
 export async function POST(req: NextRequest) {

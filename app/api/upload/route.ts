@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
-import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
+import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 import { existsSync } from "fs"
 import { v4 as uuidv4 } from "uuid"
-import { logger } from "@/lib/logger"
+import { logger } from "@/shared/lib/logger"
 
 // POST /api/upload - Upload a file
 export async function POST(req: Request) {

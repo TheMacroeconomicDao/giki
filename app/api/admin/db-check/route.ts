@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { sql } from "@/lib/db"
-import { logger } from "@/lib/logger"
+import { sql } from "@/shared/lib/db"
+import { logger } from "@/shared/lib/logger"
 
 export async function GET(req: Request) {
   try {
