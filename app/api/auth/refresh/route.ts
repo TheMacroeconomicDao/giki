@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { verifyJWT, type JWTPayload, createAccessToken, getSecureCookieOptions } from "@/lib/jwt"
-import { logger } from "@/lib/logger"
+import { verifyJWT, type JWTPayload, createAccessToken, getSecureCookieOptions } from "@/shared/lib/jwt"
+import { logger } from "@/shared/lib/logger"
 import { NextRequest } from "next/server"
 import { refreshTokenHandler } from "@/src/api/auth"
 

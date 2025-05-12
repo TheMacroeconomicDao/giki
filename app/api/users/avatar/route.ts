@@ -1,6 +1,6 @@
-import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
+import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
 import { updateUser } from "@/lib/user-service"
-import { logger } from "@/lib/logger"
+import { logger } from "@/shared/lib/logger"
 
 export async function POST(req: Request) {
   try {

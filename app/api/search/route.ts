@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server"
-import { sql } from "@/lib/db"
-import { authenticateRequest, handleApiError, successResponse } from "@/lib/api-utils"
+import { sql } from "@/shared/lib/db"
+import { authenticateRequest, handleApiError, successResponse } from "@/src/api/utils"
 
 // GET /api/search - Search pages and content
 export async function GET(req: NextRequest) {

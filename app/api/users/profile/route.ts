@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server"
-import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
+import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
 import { updateUser, getUserById } from "@/lib/user-service"
 
 // PATCH /api/users/profile - Update current user's profile

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/db"
-import { authenticateRequest, handleApiError } from "@/lib/api-utils"
+import { sql } from "@/shared/lib/db"
+import { authenticateRequest, handleApiError } from "@/src/api/utils"
 
 // GET /api/admin/backup - Export database as JSON
 export async function GET(req: NextRequest) {

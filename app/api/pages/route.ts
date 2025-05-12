@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { getPages, createPage } from "@/src/api/pages"
-import { logger } from "@/lib/logger"
-import { successResponse, errorResponse, handleApiError, authenticateRequest } from "@/lib/api-utils"
+import { logger } from "@/shared/lib/logger"
+import { successResponse, errorResponse, handleApiError, authenticateRequest } from "@/src/api/utils"
 
 export const GET = async (req: NextRequest) => getPages(req)
 

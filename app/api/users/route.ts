@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { v4 as uuidv4 } from "uuid"
 import { listUsers } from "@/lib/user-service"
-import { authenticateRequest, handleApiError, successResponse } from "@/lib/api-utils"
+import { authenticateRequest, handleApiError, successResponse } from "@/src/api/utils"
 import { getUsers, createUser } from "@/src/api/users"
 
 // In a real implementation, this would connect to a database
