@@ -29,9 +29,9 @@ pages/
 |----------------|-------------------|----------|
 | home-page      | ✅ Завершено      | 100%     |
 | page-view      | ✅ Завершено      | 100%     |
-| page-edit      | ⬜ Не начато      | 0%       |
-| user-profile   | ⬜ Не начато      | 0%       |
-| settings-page  | ⬜ Не начато      | 0%       |
+| page-edit      | ✅ Завершено      | 100%     |
+| user-profile   | ✅ Завершено      | 100%     |
+| settings-page  | ✅ Завершено      | 100%     |
 
 ## Интеграция с Next.js App Router
 

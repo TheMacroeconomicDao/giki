@@ -1,11 +1,7 @@
-import { redirect } from "next/navigation"
+'use client'
 
-export default function SettingsPage() {
-  // Проверяем, что путь валидный перед редиректом
-  try {
-    return redirect("/settings/profile")
-  } catch (error) {
-    console.error("Redirect error:", error)
-    return redirect("/")
-  }
+import { SettingsPage } from '@/pages/settings-page'
+
+export default function Settings() {
+  return <SettingsPage />
 }
