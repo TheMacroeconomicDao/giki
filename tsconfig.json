@@ -32,7 +32,7 @@
       "@pages/*": ["./src/pages/*"],
       "@app/*": ["./src/app/*"]
     },
-    "types": ["vitest/globals", "@testing-library/jest-dom"]
+    "types": ["vitest/globals", "@testing-library/jest-dom", "node"]
   },
   "include": [
     "next-env.d.ts",
