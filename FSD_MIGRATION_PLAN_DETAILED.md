@@ -52,10 +52,10 @@
   - ⬜ Создание `shared/lib/db/queries.ts` (обёртки для SQL запросов)
   - ⬜ Создание `shared/lib/db/transaction.ts` (транзакции)
 
-- ⬜ Модуль `shared/lib/jwt`:
-  - ⬜ Создание `shared/lib/jwt/index.ts`
-  - ⬜ Создание `shared/lib/jwt/tokens.ts` (генерация/верификация токенов)
-  - ⬜ Создание `shared/lib/jwt/cookies.ts` (работа с куками)
+- ✅ Модуль `shared/lib/jwt`:
+  - ✅ Создание `shared/lib/jwt/index.ts`
+  - ✅ Создание `shared/lib/jwt/tokens.ts` (генерация/верификация токенов)
+  - ✅ Создание `shared/lib/jwt/cookies.ts` (работа с куками)
 
 - ⬜ Модуль `shared/lib/logger`:
   - ⬜ Создание `shared/lib/logger/index.ts` 
@@ -101,6 +101,9 @@
 - ✅ Модуль `shared/ui/tabs` (вкладки, перенос и актуализация кода)
 - ✅ Модуль `shared/ui/toggle` (переключатель-кнопка, перенос и актуализация кода)
 - ✅ Модуль `shared/ui/toggle-group` (группа переключателей, перенос и актуализация кода)
+- ✅ Модуль `shared/ui/accordion` (аккордеон, перенос и актуализация кода)
+- ✅ Модуль `shared/ui/card` (карточка, перенос и актуализация кода)
+- ✅ Модуль `shared/ui/form` (форма, перенос и актуализация кода)
 
 ## 3. Детальная миграция слоя entities
 
