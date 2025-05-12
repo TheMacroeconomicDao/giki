@@ -29,6 +29,9 @@ export interface TraceMetadata {
   /** Пользователь */
   userId?: string;
   
+  /** Дополнительные поля для расширения */
+  [key: string]: any;
+  
   /** Дополнительные атрибуты */
   attributes?: Record<string, any>;
 }

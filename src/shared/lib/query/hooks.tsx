@@ -156,52 +156,33 @@ export function useMutation<TData, TParams = void, TError = Error>(
   
   // Функция для выполнения мутации
   const mutate = useCallback(
-    async (params: TParams) => {
-      versionRef.current += 1;
-      const currentVersion = versionRef.current;
-      
-      // Устанавливаем состояние загрузки
-      setState({
-        data: null,
-        error: null,
-        isLoading: true,
-        isSuccess: false,
-        isError: false,
-      });
-      
-      // Запускаем трекинг
-      const spanId = telemetry.startSpan('mutation', { 
-        params: JSON.stringify(params) 
-      });
+    async (options: any) => {
+      if (state.isLoading) return;
       
       try {
-        // Выполняем мутацию
-        const data = await mutationFn(params);
+        setIsLoading(true);
+        setError(null);
         
-        // Проверяем, что хук все еще актуален
-        if (currentVersion === versionRef.current) {
-          setState({
-            data,
-            error: null,
-            isLoading: false,
-            isSuccess: true,
-            isError: false,
-          });
+        const metadata: Partial<TraceMetadata> = {
+          // Указываем дополнительные метаданные в явном виде
+          attributes: { params }
+        };
+        
+        const spanId = telemetry.startSpan(`query.mutate.${cacheKey}`, metadata);
+        
+        // Если передана функция, вызываем её
+        const mutateResult = typeof options?.fn === 'function'
+          ? await options.fn(data)
+          : undefined;
+        
+        // Применяем оптимистичные данные, если они переданы
+        if (options?.optimisticData) {
+          const optimisticData = typeof options.optimisticData === 'function'
+            ? options.optimisticData(data)
+            : options.optimisticData;
           
-          // Вызываем колбэк успеха
-          if (options.onSuccess) {
-            await options.onSuccess(data, params);
-          }
-          
-          // Вызываем колбэк завершения
-          if (options.onSettled) {
-            await options.onSettled(data, null, params);
-          }
-          
-          telemetry.endSpan(spanId, 'success');
+          setData(optimisticData);
         }
-        
-        return data;
       } catch (error) {
         // Обработка ошибок
         const typedError = error as TError;
