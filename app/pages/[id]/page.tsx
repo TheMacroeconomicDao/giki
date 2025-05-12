@@ -1,7 +1,7 @@
 "use client"
 
 import { useParams } from 'next/navigation'
-import { PageView } from '@pages/page-view'
+import { PageView } from '../../src/pages/page-view'
 
 export default function PageViewPage() {
   const params = useParams()
