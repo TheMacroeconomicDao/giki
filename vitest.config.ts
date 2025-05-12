@@ -19,6 +19,7 @@ export default defineConfig({
       '**/__tests__/e2e/**', // Исключаем e2e тесты, которые запускаются с Playwright
     ],
     globals: true,
+    transformMode: { web: [/\.[jt]sx?$/] },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

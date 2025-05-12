@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { verifyJWT, type JWTPayload } from "@/lib/jwt"
+import { logger } from "@/lib/logger"
 
 // Paths that require authentication
 const protectedPaths = ["/admin", "/dashboard", "/settings", "/create"]
@@ -53,7 +54,8 @@ export async function middleware(request: NextRequest) {
     // User is authenticated and authorized
     return NextResponse.next()
   } catch (error) {
-    console.error("Token verification error:", error)
+    // Используем logger вместо console.error
+    logger.error(`Token verification error: ${error instanceof Error ? error.message : String(error)}`)
 
     // Try to refresh the token
     const refreshToken = request.cookies.get("refresh_token")?.value
@@ -61,10 +63,16 @@ export async function middleware(request: NextRequest) {
     if (refreshToken) {
       // Redirect to token refresh endpoint
       // After refresh, the user will be redirected back to the original URL
-      const response = NextResponse.redirect(
-        new URL("/api/auth/refresh?redirect=" + encodeURIComponent(request.url), request.url),
-      )
-      return response
+      // Проверяем, что URL не undefined и он является строкой
+      const originalUrl = request.url && typeof request.url === 'string' ? request.url : '/'
+      const targetUrl = new URL("/api/auth/refresh", request.url)
+      
+      // Добавляем параметр redirect, только если URL валидный
+      if (originalUrl && originalUrl !== '/undefined') {
+        targetUrl.searchParams.set('redirect', originalUrl) 
+      }
+      
+      return NextResponse.redirect(targetUrl)
     }
 
     // No refresh token or refresh failed, redirect to login

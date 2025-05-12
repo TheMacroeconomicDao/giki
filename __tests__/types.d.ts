@@ -142,10 +142,44 @@ declare module '@testing-library/user-event' {
 }
 
 interface CustomMatchers<R = unknown> {
+  // Добавляем все матчеры из jest-dom
   toBeInTheDocument(): R;
-  toHaveValue(value: string | string[] | number | null): R;
-  toHaveBeenCalledWith(...args: any[]): R;
+  toBeVisible(): R;
+  toBeEmpty(): R;
+  toBeDisabled(): R;
+  toBeEnabled(): R;
+  toBeInvalid(): R;
+  toBeRequired(): R;
+  toBeValid(): R;
+  toBeChecked(): R;
+  toBePartiallyChecked(): R;
+  toContainElement(element: HTMLElement | null): R;
+  toContainHTML(htmlText: string): R;
+  toHaveAttribute(attr: string, value?: string): R;
+  toHaveClass(...classNames: string[]): R;
+  toHaveFocus(): R;
+  toHaveFormValues(expectedValues: Record<string, any>): R;
+  toHaveStyle(css: string | Record<string, any>): R;
+  toHaveTextContent(text: string | RegExp, options?: { normalizeWhitespace: boolean }): R;
+  toHaveValue(value?: string | string[] | number | null): R;
+  toHaveDisplayValue(value: string | RegExp | Array<string | RegExp>): R;
+  toBeEmptyDOMElement(): R;
+  toHaveAccessibleDescription(expectedAccessibleDescription?: string | RegExp): R;
+  toHaveAccessibleName(expectedAccessibleName?: string | RegExp): R;
+  toHaveErrorMessage(expectedError?: string | RegExp): R;
+  
+  // Стандартные jest/vitest матчеры
   toHaveBeenCalled(): R;
+  toHaveBeenCalledTimes(times: number): R;
+  toHaveBeenCalledWith(...args: any[]): R;
+  toHaveBeenLastCalledWith(...args: any[]): R;
+  toHaveBeenNthCalledWith(n: number, ...args: any[]): R;
+  toHaveReturned(): R;
+  toHaveReturnedTimes(times: number): R;
+  toHaveReturnedWith(value: any): R;
+  toHaveLastReturnedWith(value: any): R;
+  toHaveNthReturnedWith(n: number, value: any): R;
+  toHaveLength(length: number): R;
 }
 
 declare global {

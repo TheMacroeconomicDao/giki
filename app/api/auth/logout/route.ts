@@ -20,7 +20,7 @@ const sessions: Session[] = []
 export async function POST(req: Request) {
   try {
     // Get the refresh token from cookies
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const refreshToken = cookieStore.get("refresh_token")?.value
 
     if (refreshToken) {
@@ -36,17 +36,17 @@ export async function POST(req: Request) {
         }
       } catch (error) {
         // Ignore token verification errors during logout
-        console.error("Token verification error during logout:", error)
+        console.error(`Token verification error during logout: ${error instanceof Error ? error.message : String(error)}`)
       }
     }
 
     // Clear cookies regardless of token verification
-    cookieStore.delete("access_token")
-    cookieStore.delete("refresh_token")
+    await cookieStore.delete("access_token")
+    await cookieStore.delete("refresh_token")
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Logout error:", error)
+    console.error(`Logout error: ${error instanceof Error ? error.message : String(error)}`)
     return NextResponse.json({ error: "Failed to logout" }, { status: 500 })
   }
 }

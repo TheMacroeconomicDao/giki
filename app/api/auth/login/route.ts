@@ -68,8 +68,7 @@ export async function POST(req: Request) {
     })
 
     if (!session) {
-      logger.error("Failed to create session for user", { userId: user.id })
-    }
+      logger.error("Failed to create session", new Error(`User ID: ${user.id}`))    }
 
     // Set cookies
     const cookieStore = await cookies()
