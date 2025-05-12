@@ -2,7 +2,8 @@
 
 import React, { ReactNode } from 'react';
 import { ThemeProvider } from './theme';
-// Позже мы добавим другие провайдеры, такие как AuthProvider и др.
+import { AuthProvider } from './auth';
+import { SettingsProvider } from './settings';
 
 interface AppProviderProps {
   children: ReactNode;
@@ -14,8 +15,11 @@ interface AppProviderProps {
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   return (
     <ThemeProvider>
-      {/* Другие провайдеры будут добавлены сюда */}
-      {children}
+      <AuthProvider>
+        <SettingsProvider>
+          {children}
+        </SettingsProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }; 
