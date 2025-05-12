@@ -11,7 +11,7 @@
 |----------|----------|------------------------------------------|
 | User     | 100%     | ✅ Все компоненты реализованы             |
 | Page     | 100%     | ✅ Все компоненты реализованы             |
-| Version  | 0%       | ⬜ Не начато                             |
+| Version  | 100%     | ✅ Все компоненты реализованы             |
 | Translation | 0%    | ⬜ Не начато                             |
 | Settings | 0%       | ⬜ Не начато                             |
 
@@ -29,11 +29,11 @@
   - ✅ API (pageApi.ts)
   - ✅ UI-компоненты (PageCard, PageInfo, PageContent, PageTitle, PageStats)
 
-### entities/page-version
-- ⬜ [Компоненты версии страницы](./page-version.md)
-  - ⬜ Модель (types.ts, store.ts)
-  - ⬜ API (versionApi.ts)
-  - ⬜ UI-компоненты (VersionCard, VersionDiff, VersionInfo)
+### entities/version
+- ✅ [Компоненты версии страницы](./page-version.md)
+  - ✅ Модель (types.ts, store.ts)
+  - ✅ API (versionApi.ts)
+  - ✅ UI-компоненты (VersionCard, VersionDiff, VersionInfo)
 
 ### entities/translation
 - ⬜ [Компоненты перевода](./translation.md)
@@ -58,5 +58,6 @@
 
 - ✅ Завершить перенос сущности User
 - ✅ Реализовать сущность Page полностью
-- ⬜ Начать перенос сущности Version
+- ✅ Реализовать сущность Version полностью
+- ⬜ Начать перенос сущности Translation
 - ⬜ Обеспечить связь между сущностями через модели 
