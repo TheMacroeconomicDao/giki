@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { getAllSettings, updateSettings, initializeSettings } from "@/lib/settings-service"
-import { logger } from "@/lib/logger"
+import { getAllSettings, updateSettings, initializeSettings } from "@/entities/settings/model"
+import { logger } from "@/shared/lib/logger"
 
 // Initialize settings on first request
 let initialized = false

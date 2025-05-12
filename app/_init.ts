@@ -1,6 +1,6 @@
-import { initializeDatabase } from "@/lib/db-check"
-import { initializeSettings } from "@/lib/settings-service"
-import { logger } from "@/lib/logger"
+import { initializeDatabase } from "@/shared/lib/db/check"
+import { initializeSettings } from "@/entities/settings"
+import { logger } from "@/shared/lib/logger"
 
 // Initialize the database and settings
 export async function initialize() {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
-import { getPageVersions, getPageById } from "@/lib/page-service"
-import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
-import { logger } from "@/lib/logger"
+import { getPageVersions, getPageById } from "@/entities/page"
+import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
+import { logger } from "@/shared/lib/logger"
 
 // GET /api/pages/[id]/versions - Get all versions of a page
 export async function GET(req: Request, { params }: { params: { id: string } }) {

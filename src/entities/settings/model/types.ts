@@ -67,4 +67,91 @@ export const updateSystemSettingsSchema = systemSettingsSchema.partial().omit({
 /**
  * Тип для обновления системных настроек
  */
-export type UpdateSystemSettingsDto = z.infer<typeof updateSystemSettingsSchema>; 
+export type UpdateSystemSettingsDto = z.infer<typeof updateSystemSettingsSchema>;
+
+/**
+ * Типы для настроек (FSD)
+ */
+
+/**
+ * Системные настройки
+ */
+export interface SystemSettings {
+  title: string;
+  description: string;
+  version: string;
+  allowSignups: boolean;
+  defaultRole: string;
+  maintenance: boolean;
+  featuredPages: string[];
+}
+
+/**
+ * Настройки интерфейса
+ */
+export interface UISettings {
+  theme: 'light' | 'dark' | 'system';
+  accentColor: string;
+  fontSize: 'small' | 'medium' | 'large';
+  sidebar: {
+    expanded: boolean;
+    showRecent: boolean;
+    showPopular: boolean;
+  };
+}
+
+/**
+ * Настройки редактора
+ */
+export interface EditorSettings {
+  defaultFormat: 'markdown' | 'wysiwyg';
+  autoSave: boolean;
+  spellCheck: boolean;
+  wordCount: boolean;
+  preview: boolean;
+}
+
+/**
+ * Настройки переводов
+ */
+export interface TranslationSettings {
+  enabled: boolean;
+  defaultLanguage: string;
+  availableLanguages: string[];
+  useAI: boolean;
+}
+
+/**
+ * Настройки GitHub интеграции
+ */
+export interface GitHubSettings {
+  enabled: boolean;
+  autoSync: boolean;
+  syncInterval: number;
+}
+
+/**
+ * Все настройки приложения
+ */
+export interface Settings {
+  system: SystemSettings;
+  ui: UISettings;
+  editor: EditorSettings;
+  translations: TranslationSettings;
+  github: GitHubSettings;
+}
+
+/**
+ * Ключи настроек
+ */
+export type SettingKey = keyof Settings;
+
+/**
+ * Запись настройки в базе данных
+ */
+export interface SettingRecord {
+  key: string;
+  value: any;
+  created_at: string;
+  updated_at: string;
+} 

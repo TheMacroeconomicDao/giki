@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server"
-import { getPageById, getPageVersion } from "@/lib/page-service"
-import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
+import { getPageById, getPageVersion } from "@/entities/page"
+import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
 
 // GET /api/pages/[id]/versions/[versionId] - Get specific page version
 export async function GET(req: NextRequest, { params }: { params: { id: string; versionId: string } }) {

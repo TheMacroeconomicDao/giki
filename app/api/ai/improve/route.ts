@@ -1,5 +1,5 @@
-import { improveText } from "@/lib/openai"
-import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
+import { improveText } from "@/shared/lib/openai"
+import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
 
 export async function POST(req: Request) {
   try {

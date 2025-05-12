@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server"
-import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/lib/api-utils"
-import { updateUser, getUserById } from "@/lib/user-service"
+import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
+import { updateUser, getUserById } from "@/entities/user"
 
 // PATCH /api/users/profile - Update current user's profile
 export async function PATCH(req: NextRequest) {

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { verifyJWT, type JWTPayload } from "@/lib/jwt"
-import { getUserSessions, deactivateSession } from "@/lib/session-service"
-import { logger } from "@/lib/logger"
+import { verifyJWT, type JWTPayload } from "@/shared/lib/jwt"
+import { getUserSessions, deactivateSession } from "@/entities/user/model/session"
+import { logger } from "@/shared/lib/logger"
 
 export async function GET(req: Request) {
   try {

@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { v4 as uuidv4 } from "uuid"
-import { listUsers } from "@/lib/user-service"
-import { authenticateRequest, handleApiError, successResponse } from "@/lib/api-utils"
+import { listUsers } from "@/entities/user"
+import { authenticateRequest, handleApiError, successResponse } from "@/src/api/utils"
+import { getUsers, createUser } from "@/src/api/users"
 
 // In a real implementation, this would connect to a database
 // For now, we'll use an in-memory store
@@ -54,75 +55,6 @@ const users = [
 ]
 
 // GET /api/users - List users
-export async function GET(req: NextRequest) {
-  try {
-    // Authenticate the request (only admins can list all users)
-    const auth = await authenticateRequest(req, "admin")
-    if (!auth.authenticated) return auth.error
+export const GET = async (req: NextRequest) => getUsers(req)
 
-    // Get query parameters
-    const searchParams = req.nextUrl.searchParams
-    const role = searchParams.get("role") || undefined
-    const limit = Number.parseInt(searchParams.get("limit") || "10", 10)
-    const offset = Number.parseInt(searchParams.get("offset") || "0", 10)
-
-    // Get users with filters
-    const { users, total } = await listUsers({
-      role,
-      limit,
-      offset,
-    })
-
-    return successResponse({
-      users,
-      total,
-      limit,
-      offset,
-    })
-  } catch (error) {
-    return handleApiError(error, "Failed to list users")
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    // In a real app, we would check authentication and authorization here
-    // Only admins should be able to create users
-
-    const { address, name, email, role } = await req.json()
-
-    // Validate required fields
-    if (!address) {
-      return NextResponse.json({ error: "Address is required" }, { status: 400 })
-    }
-
-    // Check if user already exists
-    if (users.some((user) => user.address.toLowerCase() === address.toLowerCase())) {
-      return NextResponse.json({ error: "User with this address already exists" }, { status: 409 })
-    }
-
-    // Create new user
-    const newUser = {
-      id: uuidv4(),
-      address,
-      name: name || null,
-      email: email || null,
-      role: role || "viewer",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastLogin: null,
-      preferences: {
-        language: "en",
-        theme: "system",
-        emailNotifications: true,
-      },
-    }
-
-    users.push(newUser)
-
-    return NextResponse.json({ user: newUser })
-  } catch (error) {
-    console.error("Error creating user:", error)
-    return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
-  }
-}
+export const POST = async (req: NextRequest) => createUser(req)
