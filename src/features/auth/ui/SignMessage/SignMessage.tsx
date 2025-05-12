@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Button } from '@shared/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@shared/ui/card';
-import { Alert, AlertDescription } from '@shared/ui/alert';
-import { Spinner } from '@shared/ui/spinner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
 import { useAuthStore } from '../../model/store';
 import { Web3Connect } from '../Web3Connect';
+import { SiweMessage } from 'siwe';
 
 interface SignMessageProps {
   message: string;
