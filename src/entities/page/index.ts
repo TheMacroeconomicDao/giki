@@ -2,4 +2,7 @@
 export * from './model';
 
 // API методы
-export * from './api'; 
+export * from './api';
+
+// UI-компоненты
+export * from './ui'; 
