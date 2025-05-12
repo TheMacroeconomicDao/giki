@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs"
 import Link from "next/link"
 
 export const metadata: Metadata = {

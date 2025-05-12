@@ -2,7 +2,7 @@ import type React from "react"
 import "./globals.css"
 import { Inter } from "next/font/google"
 import { Toaster } from "@/shared/ui/toaster"
-import { ErrorBoundary } from "@/components/error-boundary"
+import { ErrorBoundary } from "@/shared/ui/error-boundary"
 import { Header } from "@/widgets/header"
 import { AppProvider } from "@/app/providers"
 

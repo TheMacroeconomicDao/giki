@@ -153,4 +153,7 @@ async function handleErrorResponse(response: Response): Promise<Error> {
   (error as any).statusText = response.statusText;
   
   return error;
-} 
+}
+
+export * from './apiClient';
+export * from './types';

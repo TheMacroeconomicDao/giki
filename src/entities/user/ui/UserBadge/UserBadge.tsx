@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/shared/ui/badge';
 import { User } from '../../model/types';
 import { cn } from '@/lib/utils'; // Assuming utils path is configured
 

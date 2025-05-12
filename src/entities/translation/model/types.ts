@@ -80,4 +80,20 @@ export interface LanguageInfo {
 /**
  * Тип для статуса перевода
  */
-export type TranslationStatus = 'complete' | 'partial' | 'machine' | 'none'; 
+export type TranslationStatus = 'complete' | 'partial' | 'machine' | 'none';
+
+/**
+ * Тип для переведенного контента (совместим с API)
+ */
+export interface TranslatedContent {
+  id: string;
+  pageId: string;
+  language: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  isMachineTranslation: boolean;
+  status: TranslationStatus;
+}

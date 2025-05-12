@@ -1,9 +1,9 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/shared/ui/card';
 import { User } from '@entities/user';
 import { UserAvatar } from '../UserAvatar';
 import { UserBadge } from '../UserBadge';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
 

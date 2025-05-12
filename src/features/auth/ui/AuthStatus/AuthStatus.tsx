@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { UserAvatar } from '@entities/user';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +9,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Spinner } from '@/components/ui/spinner';
+} from '@/shared/ui/dropdown-menu';
+import { Spinner } from '@/shared/ui/spinner';
 import { useAuthStore } from '../../model/store';
 import { authApi } from '../../api/authApi';
 import { usePathname } from 'next/navigation';
