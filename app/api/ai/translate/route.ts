@@ -1,4 +1,4 @@
-import { translateText } from "@/lib/openai"
+import { translateText } from "@/shared/lib/openai"
 import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
 
 export async function POST(req: Request) {

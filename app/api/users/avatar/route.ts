@@ -1,5 +1,5 @@
 import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
-import { updateUser } from "@/lib/user-service"
+import { updateUser } from "@/entities/user"
 import { logger } from "@/shared/lib/logger"
 
 export async function POST(req: Request) {

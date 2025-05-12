@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { v4 as uuidv4 } from "uuid"
-import { listUsers } from "@/lib/user-service"
+import { listUsers } from "@/entities/user"
 import { authenticateRequest, handleApiError, successResponse } from "@/src/api/utils"
 import { getUsers, createUser } from "@/src/api/users"
 

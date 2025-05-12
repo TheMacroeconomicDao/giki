@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getUserById } from "@/lib/user-service"
+import { getUserById } from "@/entities/user"
 
 export async function GET(request: NextRequest, { params }: { params: { userId: string } }): Promise<NextResponse> {
   const userId = params.userId
