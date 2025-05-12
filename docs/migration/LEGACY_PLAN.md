@@ -46,11 +46,11 @@
 - ✅ Создание `shared/api`: типизированный API клиент
 
 ### 2.2. Миграция утилит из `/lib` в `/src/shared/lib`
-- ⬜ Модуль `shared/lib/db`:
-  - ⬜ Создание `shared/lib/db/index.ts`
-  - ⬜ Создание `shared/lib/db/connection.ts` (из lib/db.ts)
-  - ⬜ Создание `shared/lib/db/queries.ts` (обёртки для SQL запросов)
-  - ⬜ Создание `shared/lib/db/transaction.ts` (транзакции)
+- ✅ Модуль `shared/lib/db`:
+  - ✅ Создание `shared/lib/db/index.ts`
+  - ✅ Создание `shared/lib/db/connection.ts` (из lib/db.ts)
+  - ✅ Создание `shared/lib/db/queries.ts` (обёртки для SQL запросов)
+  - ✅ Создание `shared/lib/db/transaction.ts` (транзакции)
 
 - ✅ Модуль `shared/lib/jwt`:
   - ✅ Создание `shared/lib/jwt/index.ts`
@@ -62,21 +62,21 @@
   - ✅ Создание `shared/lib/logger/server.ts` (серверное логирование)
   - ✅ Создание `shared/lib/logger/client.ts` (клиентское логирование)
 
-- ⬜ Модуль `shared/lib/web3`:
-  - ⬜ Создание `shared/lib/web3/index.ts`
-  - ⬜ Создание `shared/lib/web3/providers.ts` (поддержка провайдеров)
-  - ⬜ Создание `shared/lib/web3/signature.ts` (подпись сообщений)
-  - ⬜ Создание `shared/lib/web3/chains.ts` (конфигурация цепей)
+- ✅ Модуль `shared/lib/web3`:
+  - ✅ Создание `shared/lib/web3/index.ts`
+  - ✅ Создание `shared/lib/web3/providers.ts` (поддержка провайдеров)
+  - ✅ Создание `shared/lib/web3/signature.ts` (подпись сообщений)
+  - ✅ Создание `shared/lib/web3/chains.ts` (конфигурация цепей)
 
-- ⬜ Модуль `shared/lib/github`:
-  - ⬜ Создание `shared/lib/github/index.ts`
-  - ⬜ Создание `shared/lib/github/api.ts` (взаимодействие с GitHub API)
-  - ⬜ Создание `shared/lib/github/sync.ts` (синхронизация данных с GitHub)
+- ✅ Модуль `shared/lib/github`:
+  - ✅ Создание `shared/lib/github/index.ts`
+  - ✅ Создание `shared/lib/github/api.ts` (взаимодействие с GitHub API)
+  - ✅ Создание `shared/lib/github/sync.ts` (синхронизация данных с GitHub)
 
-- ⬜ Модуль `shared/lib/openai`:
-  - ⬜ Создание `shared/lib/openai/index.ts`
-  - ⬜ Создание `shared/lib/openai/api.ts` (взаимодействие с OpenAI API)
-  - ⬜ Создание `shared/lib/openai/translate.ts` (функции перевода)
+- ✅ Модуль `shared/lib/openai`:
+  - ✅ Создание `shared/lib/openai/index.ts`
+  - ✅ Создание `shared/lib/openai/api.ts` (взаимодействие с OpenAI API)
+  - ✅ Создание `shared/lib/openai/translate.ts` (функции перевода)
 
 ### 2.3. Создание UI-компонентов слоя shared
 - ✅ Модуль `shared/ui/button` (базовая кнопка, перенос и актуализация кода)

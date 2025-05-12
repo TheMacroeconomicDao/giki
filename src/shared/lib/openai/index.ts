@@ -1,2 +1,3 @@
-// Экспортируем API из модуля openai
-export * from './api' 
+// Экспортируем API и утилиты из модуля openai
+export * from './api'
+export * from './translate' 
