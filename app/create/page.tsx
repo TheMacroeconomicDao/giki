@@ -1,22 +1,19 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/shared/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card"
+import { Input } from "@/shared/ui/input"
+import { Label } from "@/shared/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs"
 import { ArrowLeftRight, Globe, Lock, Save, Users } from "lucide-react"
 import { useState } from "react"
-import { MarkdownEditor } from "@/components/markdown-editor"
-import { useToast } from "@/hooks/use-toast"
-import { useWeb3 } from "@/hooks/use-web3"
+import { useToast } from "@/shared/ui/use-toast"
 import { useRouter } from "next/navigation"
 import ReactMarkdown from "react-markdown"
 
 export default function CreatePage() {
   const { toast } = useToast()
-  const { address, isConnected } = useWeb3()
   const router = useRouter()
 
   const [title, setTitle] = useState("")
@@ -95,15 +92,6 @@ export default function CreatePage() {
       return
     }
 
-    if (!isConnected) {
-      toast({
-        title: "Authentication required",
-        description: "Please connect your wallet to save pages",
-        variant: "destructive",
-      })
-      return
-    }
-
     try {
       setIsSaving(true)
 
@@ -154,6 +142,10 @@ export default function CreatePage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    // Implementation of handleInputChange function
   }
 
   return (
