@@ -1,6 +1,6 @@
-import { syncPagesToGitHub, testGitHubConnection, createRepositoryIfNeeded } from "@/lib/github"
+import { syncPagesToGitHub, testGitHubConnection, createRepositoryIfNeeded } from "@/shared/lib/github"
 import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
-import { listPages } from "@/lib/page-service"
+import { listPages } from "@/entities/page"
 
 export async function POST(req: Request) {
   try {

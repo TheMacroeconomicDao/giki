@@ -1,4 +1,4 @@
-import { testGitHubConnection } from "@/lib/github"
+import { testGitHubConnection } from "@/shared/lib/github"
 import { authenticateRequest, handleApiError, successResponse } from "@/src/api/utils"
 
 export async function GET(req: Request) {

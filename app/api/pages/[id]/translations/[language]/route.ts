@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server"
-import { getPageById, getTranslation, addTranslation } from "@/lib/page-service"
+import { getPageById, getTranslation, addTranslation } from "@/entities/page"
 import { authenticateRequest, handleApiError, successResponse, errorResponse } from "@/src/api/utils"
 
 // GET /api/pages/[id]/translations/[language] - Get specific translation
