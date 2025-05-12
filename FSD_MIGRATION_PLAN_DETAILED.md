@@ -57,10 +57,10 @@
   - ✅ Создание `shared/lib/jwt/tokens.ts` (генерация/верификация токенов)
   - ✅ Создание `shared/lib/jwt/cookies.ts` (работа с куками)
 
-- ⬜ Модуль `shared/lib/logger`:
-  - ⬜ Создание `shared/lib/logger/index.ts` 
-  - ⬜ Создание `shared/lib/logger/server.ts` (серверное логирование)
-  - ⬜ Создание `shared/lib/logger/client.ts` (клиентское логирование)
+- ✅ Модуль `shared/lib/logger`:
+  - ✅ Создание `shared/lib/logger/index.ts` 
+  - ✅ Создание `shared/lib/logger/server.ts` (серверное логирование)
+  - ✅ Создание `shared/lib/logger/client.ts` (клиентское логирование)
 
 - ⬜ Модуль `shared/lib/web3`:
   - ⬜ Создание `shared/lib/web3/index.ts`

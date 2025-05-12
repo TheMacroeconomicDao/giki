@@ -85,4 +85,7 @@ export async function createRepositoryIfNeeded(): Promise<{ success: boolean; er
 		logger.error('Failed to create GitHub repository:', error as Error)
 		return { success: false, error: (error as Error).message }
 	}
-} 
+}
+
+export * from './api'
+export * from './sync' 
