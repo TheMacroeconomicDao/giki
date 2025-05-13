@@ -1,22 +1,22 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/shared/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card"
+import { Input } from "@/shared/ui/input"
+import { Label } from "@/shared/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs"
+import { Textarea } from "@/shared/ui/textarea"
 import { ArrowLeftRight, Globe, Lock, Save, Users } from "lucide-react"
 import { useState } from "react"
-import { MarkdownEditor } from "@/components/markdown-editor"
-import { useToast } from "@/hooks/use-toast"
-import { useWeb3 } from "@/hooks/use-web3"
+import { useToast } from "@/shared/ui/use-toast"
 import { useRouter } from "next/navigation"
 import ReactMarkdown from "react-markdown"
+import { useAuthStore } from "@/features/auth"
 
 export default function CreatePage() {
-  const { toast } = useToast()
-  const { address, isConnected } = useWeb3()
+  const { addToast } = useToast()
+  const { walletAddress } = useAuthStore()
   const router = useRouter()
 
   const [title, setTitle] = useState("")
@@ -30,11 +30,7 @@ export default function CreatePage() {
 
   const handleTranslate = async () => {
     if (!content.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter some content to translate",
-        variant: "destructive",
-      })
+      addToast("Please enter some content to translate", "error")
       return
     }
 
@@ -60,17 +56,10 @@ export default function CreatePage() {
       const data = await response.json()
       setTranslatedContent(data.translatedText)
 
-      toast({
-        title: "Translation complete",
-        description: "Your content has been translated successfully",
-      })
+      addToast("Your content has been translated successfully", "success")
     } catch (error) {
       console.error("Translation error:", error)
-      toast({
-        title: "Translation failed",
-        description: "There was an error translating your content. Please try again.",
-        variant: "destructive",
-      })
+      addToast("There was an error translating your content. Please try again.", "error")
     } finally {
       setIsTranslating(false)
     }
@@ -78,29 +67,17 @@ export default function CreatePage() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a title for your page",
-        variant: "destructive",
-      })
+      addToast("Please enter a title for your page", "error")
       return
     }
 
     if (!content.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter some content for your page",
-        variant: "destructive",
-      })
+      addToast("Please enter some content for your page", "error")
       return
     }
 
-    if (!isConnected) {
-      toast({
-        title: "Authentication required",
-        description: "Please connect your wallet to save pages",
-        variant: "destructive",
-      })
+    if (!walletAddress) {
+      addToast("Wallet not connected. Please connect your wallet to save.", "error")
       return
     }
 
@@ -124,9 +101,9 @@ export default function CreatePage() {
           translatedContent: translatedContentObj,
           visibility,
           author: {
-            id: address,
+            id: walletAddress,
             name: "User", // In a real app, you'd get the user's name from a profile
-            address,
+            address: walletAddress,
           },
         }),
       })
@@ -137,23 +114,20 @@ export default function CreatePage() {
 
       const data = await response.json()
 
-      toast({
-        title: "Page saved",
-        description: "Your page has been saved successfully",
-      })
+      addToast("Page saved successfully", "success")
 
       // Redirect to the new page
       router.push(`/pages/${data.page.id}`)
     } catch (error) {
       console.error("Save error:", error)
-      toast({
-        title: "Save failed",
-        description: "There was an error saving your page. Please try again.",
-        variant: "destructive",
-      })
+      addToast("There was an error saving your page. Please try again.", "error")
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    // Implementation of handleInputChange function
   }
 
   return (
@@ -274,7 +248,12 @@ export default function CreatePage() {
                               ? "German"
                               : "Russian"}
                     </Label>
-                    <MarkdownEditor value={content} onChange={setContent} placeholder="Write your content here..." />
+                    <Textarea
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      placeholder="Write your content here..."
+                      className="min-h-[400px]"
+                    />
                   </div>
                   <div>
                     <Label htmlFor="translated-content" className="text-sm font-medium">
@@ -288,10 +267,11 @@ export default function CreatePage() {
                               ? "German"
                               : "Russian"}
                     </Label>
-                    <MarkdownEditor
+                    <Textarea
                       value={translatedContent}
-                      onChange={setTranslatedContent}
+                      onChange={(e) => setTranslatedContent(e.target.value)}
                       placeholder="Translated content will appear here..."
+                      className="min-h-[400px]"
                     />
                   </div>
                 </div>

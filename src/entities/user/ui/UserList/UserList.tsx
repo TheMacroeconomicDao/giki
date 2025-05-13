@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { User } from '../../model/types';
+import { User } from '@entities/user';
 import { UserCard } from '../UserCard';
-import { Input } from '@shared/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@shared/ui/select';
+import { Input } from '@/shared/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 
 interface UserListProps {
   users: User[];

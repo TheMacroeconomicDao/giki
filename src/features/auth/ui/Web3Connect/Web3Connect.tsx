@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Button } from '@shared/ui/button';
+import { Button } from '@/shared/ui/button';
 import { 
   DropdownMenu, 
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem 
-} from '@shared/ui/dropdown-menu';
+} from '@/shared/ui/dropdown-menu';
 import { useAuthStore } from '../../model/store';
 import { Web3Provider } from '../../model/types';
 
