@@ -102,15 +102,32 @@ prod_logs() {
   $COMPOSE_CMD logs -f
 }
 
+# Общее управление всеми окружениями
+all_down() {
+  log "Остановка всех окружений..."
+  dev_down
+  prod_down
+}
+
+all_restart() {
+  log "Перезапуск всех окружений..."
+  dev_down
+  dev_up
+  prod_down
+  prod_up
+}
+
 # Сборка образов заново
 build() {
   env=$1
   local build_result=0
   if [ "$env" = "prod" ]; then
     log "Сборка продакшен образа..."
+    $COMPOSE_CMD -f docker-compose.prod.yml run --rm app pnpm install --frozen-lockfile
     $COMPOSE_CMD build || build_result=$?
   else
     log "Сборка образа для разработки..."
+    $COMPOSE_CMD -f docker-compose.dev.yml run --rm app pnpm install --frozen-lockfile
     $COMPOSE_CMD -f docker-compose.dev.yml build || build_result=$?
   fi
   
@@ -222,6 +239,14 @@ main() {
       esac
       ;;
       
+    all)
+      case "$2" in
+        down) all_down ;;
+        restart) all_restart ;;
+        *) log "Использование: $0 all [down|restart]" ;;
+      esac
+      ;;
+      
     db)
       case "$2" in
         dump) db_dump ;;
@@ -233,7 +258,7 @@ main() {
       
     *)
       # Вывод справки (без изменений)
-      log "Использование: $0 [dev|prod|db] <команда>"
+      log "Использование: $0 [dev|prod|all|db] <команда>"
       log ""
       log "Команды для разработки (dev):"
       log "  up      - Запуск контейнеров для разработки"
@@ -248,6 +273,10 @@ main() {
       log "  logs    - Просмотр логов продакшен среды"
       log "  build   - Сборка продакшен образа"
       log "  restart - Перезапуск продакшен контейнеров"
+      log ""
+      log "Команды для управления всеми окружениями (all):"
+      log "  down    - Остановка всех окружений"
+      log "  restart - Перезапуск всех окружений"
       log ""
       log "Команды для базы данных (db):"
       log "  dump            - Создание дампа базы данных"
