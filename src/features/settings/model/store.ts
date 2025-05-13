@@ -1,13 +1,15 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
+import type { Draft } from 'immer';
 import type { 
   SettingsState, 
   UserSettings, 
   ProfileUpdateData,
   UIPreferences,
   NotificationSettings,
-  PrivacySettings
+  PrivacySettings,
+  SettingsActions
 } from './types';
 
 // Начальные состояния
@@ -47,57 +49,37 @@ const initialState: SettingsState = {
   error: null,
 };
 
-type SettingsActions = {
-  // Общие действия
-  setSettings: (settings: UserSettings | null) => void;
-  setLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
-  reset: () => void;
-  
-  // Загрузка и сохранение настроек
-  fetchSettings: () => Promise<void>;
-  
-  // Обновление профиля
-  updateProfile: (data: ProfileUpdateData) => Promise<void>;
-  
-  // Обновление UI настроек
-  updateUIPreferences: (preferences: Partial<UIPreferences>) => Promise<void>;
-  
-  // Обновление настроек уведомлений
-  updateNotificationSettings: (settings: Partial<NotificationSettings>) => Promise<void>;
-  
-  // Обновление настроек приватности
-  updatePrivacySettings: (settings: Partial<PrivacySettings>) => Promise<void>;
-};
-
 /**
- * Стор для управления настройками пользователя
+ * Хранилище для управления настройками пользователя
  */
 export const useSettingsStore = create<SettingsState & SettingsActions>()(
   devtools(
-    immer((set, get) => ({
+    immer<SettingsState & SettingsActions>((set, get) => ({ 
       ...initialState,
 
       // Устанавливает все настройки
-      setSettings: (settings) => set((state) => {
-        state.settings = settings;
-        return state;
-      }),
+      setSettings: (settings: UserSettings | null) => 
+        set((state: Draft<SettingsState & SettingsActions>) => { 
+          state.settings = settings; 
+        }),
 
       // Устанавливает состояние загрузки
-      setLoading: (isLoading) => set((state) => {
-        state.isLoading = isLoading;
-        return state;
-      }),
+      setLoading: (isLoading: boolean) => 
+        set((state: Draft<SettingsState & SettingsActions>) => { 
+          state.isLoading = isLoading; 
+        }),
 
       // Устанавливает ошибку
-      setError: (error) => set((state) => {
-        state.error = error;
-        return state;
-      }),
+      setError: (error: string | null) => 
+        set((state: Draft<SettingsState & SettingsActions>) => { 
+          state.error = error; 
+        }),
 
       // Сбрасывает состояние настроек
-      reset: () => set(initialState),
+      reset: () => 
+        set((state: Draft<SettingsState & SettingsActions>) => { 
+          Object.assign(state, initialState); 
+        }),
 
       // Загружает настройки с сервера
       fetchSettings: async () => {
@@ -115,7 +97,6 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           setSettings(data || initialUserSettings);
         } catch (error) {
           setError(error instanceof Error ? error.message : 'Неизвестная ошибка');
-          // Устанавливаем дефолтные настройки в случае ошибки
           setSettings(initialUserSettings);
         } finally {
           setLoading(false);
@@ -123,7 +104,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       },
 
       // Обновляет профиль пользователя
-      updateProfile: async (data) => {
+      updateProfile: async (data: ProfileUpdateData) => {
         const { setLoading, setError, settings, setSettings } = get();
         
         if (!settings) {
@@ -135,7 +116,6 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           setLoading(true);
           setError(null);
           
-          // Формируем FormData для отправки файлов
           const formData = new FormData();
           Object.entries(data).forEach(([key, value]) => {
             if (value !== undefined) {
@@ -143,7 +123,6 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
             }
           });
           
-          // Здесь будет вызов API
           const response = await fetch('/api/settings/profile', {
             method: 'PUT',
             body: formData,
@@ -167,7 +146,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       },
 
       // Обновляет настройки интерфейса
-      updateUIPreferences: async (preferences) => {
+      updateUIPreferences: async (preferences: Partial<UIPreferences>) => {
         const { setLoading, setError, settings, setSettings } = get();
         
         if (!settings) {
@@ -179,14 +158,12 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           setLoading(true);
           setError(null);
           
-          // Оптимистично обновляем UI (до ответа сервера)
           const updatedUI = { ...settings.ui, ...preferences };
           setSettings({
             ...settings,
             ui: updatedUI,
           });
           
-          // Здесь будет вызов API
           const response = await fetch('/api/settings/ui', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -194,7 +171,6 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           });
           
           if (!response.ok) {
-            // В случае ошибки откатываем обновление
             setSettings(settings);
             const errorData = await response.json();
             throw new Error(errorData.message || 'Ошибка сохранения настроек интерфейса');
@@ -207,7 +183,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       },
 
       // Обновляет настройки уведомлений
-      updateNotificationSettings: async (notificationSettings) => {
+      updateNotificationSettings: async (notificationSettings: Partial<NotificationSettings>) => {
         const { setLoading, setError, settings, setSettings } = get();
         
         if (!settings) {
@@ -219,14 +195,12 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           setLoading(true);
           setError(null);
           
-          // Оптимистично обновляем настройки уведомлений
           const updatedNotifications = { ...settings.notifications, ...notificationSettings };
           setSettings({
             ...settings,
             notifications: updatedNotifications,
           });
           
-          // Здесь будет вызов API
           const response = await fetch('/api/settings/notifications', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -234,7 +208,6 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           });
           
           if (!response.ok) {
-            // В случае ошибки откатываем обновление
             setSettings(settings);
             const errorData = await response.json();
             throw new Error(errorData.message || 'Ошибка сохранения настроек уведомлений');
@@ -247,7 +220,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       },
 
       // Обновляет настройки приватности
-      updatePrivacySettings: async (privacySettings) => {
+      updatePrivacySettings: async (privacySettings: Partial<PrivacySettings>) => {
         const { setLoading, setError, settings, setSettings } = get();
         
         if (!settings) {
@@ -259,14 +232,12 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           setLoading(true);
           setError(null);
           
-          // Оптимистично обновляем настройки приватности
           const updatedPrivacy = { ...settings.privacy, ...privacySettings };
           setSettings({
             ...settings,
             privacy: updatedPrivacy,
           });
           
-          // Здесь будет вызов API
           const response = await fetch('/api/settings/privacy', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -274,8 +245,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           });
           
           if (!response.ok) {
-            // В случае ошибки откатываем обновление
-            setSettings(settings);
+            setSettings(settings); // Восстанавливаем предыдущее состояние
             const errorData = await response.json();
             throw new Error(errorData.message || 'Ошибка сохранения настроек приватности');
           }
@@ -285,7 +255,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           setLoading(false);
         }
       },
-    })),
+    })), 
     { name: 'settings-store' }
   )
 );

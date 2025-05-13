@@ -11,6 +11,7 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
@@ -32,7 +33,7 @@
       "@pages/*": ["./src/pages/*"],
       "@app/*": ["./src/app/*"]
     },
-    "types": ["vitest/globals", "@testing-library/jest-dom", "node"]
+    "types": ["vitest/globals", "node"]
   },
   "include": [
     "next-env.d.ts",

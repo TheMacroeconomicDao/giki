@@ -4,7 +4,7 @@
 // @ts-ignore - игнорируем ошибку с импортом React
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { queryCache, QueryOptions, CachedData, CacheKey } from './cache';
-import { telemetry } from '@/shared/lib/telemetry';
+import { telemetry, TraceMetadata } from '@/shared/lib/telemetry';
 
 /**
  * Хук для выполнения запроса с кэшированием
@@ -130,7 +130,7 @@ export function useQuery<T, P = void>(
  */
 export function useMutation<TData, TParams = void, TError = Error>(
   mutationFn: (params: TParams) => Promise<TData>,
-  options: {
+  hookOptions: { 
     onSuccess?: (data: TData, params: TParams) => void | Promise<void>;
     onError?: (error: TError, params: TParams) => void | Promise<void>;
     onSettled?: (data: TData | null, error: TError | null, params: TParams) => void | Promise<void>;
@@ -156,81 +156,93 @@ export function useMutation<TData, TParams = void, TError = Error>(
   
   // Функция для выполнения мутации
   const mutate = useCallback(
-    async (options: any) => {
+    async (mutateParams: TParams, 
+           mutationContextOptions?: { 
+             optimisticData?: TData | ((currentData: TData | null) => TData);
+           }
+    ) => {
       if (state.isLoading) return;
       
+      versionRef.current += 1;
+      const currentVersionCapture = versionRef.current;
+
+      setState(prev => ({
+        ...prev,
+        isLoading: true,
+        error: null, 
+        isSuccess: false,
+        isError: false,
+      }));
+
+      // Применяем оптимистичные данные, если они переданы для этого вызова
+      if (mutationContextOptions?.optimisticData) {
+        const newOptimisticData = typeof mutationContextOptions.optimisticData === 'function'
+          ? (mutationContextOptions.optimisticData as (currentData: TData | null) => TData)(state.data)
+          : mutationContextOptions.optimisticData;
+        setState(prev => ({ ...prev, data: newOptimisticData }));
+      }
+      
+      let traceSpanId: string | undefined;
       try {
-        setIsLoading(true);
-        setError(null);
-        
         const metadata: Partial<TraceMetadata> = {
-          // Указываем дополнительные метаданные в явном виде
-          attributes: { params }
+          attributes: { params: JSON.stringify(mutateParams) } 
         };
+        const mutationName = mutationFn.name || 'unknown_mutation'; 
+        traceSpanId = telemetry.startSpan(`query.mutate.${mutationName}`, metadata);
         
-        const spanId = telemetry.startSpan(`query.mutate.${cacheKey}`, metadata);
+        const result = await mutationFn(mutateParams); 
         
-        // Если передана функция, вызываем её
-        const mutateResult = typeof options?.fn === 'function'
-          ? await options.fn(data)
-          : undefined;
-        
-        // Применяем оптимистичные данные, если они переданы
-        if (options?.optimisticData) {
-          const optimisticData = typeof options.optimisticData === 'function'
-            ? options.optimisticData(data)
-            : options.optimisticData;
-          
-          setData(optimisticData);
+        if (currentVersionCapture === versionRef.current) {
+          setState({ 
+            data: result,
+            error: null,
+            isLoading: false,
+            isSuccess: true,
+            isError: false,
+          });
+
+          if (hookOptions.onSuccess) {
+            await hookOptions.onSuccess(result, mutateParams);
+          }
         }
-      } catch (error) {
-        // Обработка ошибок
-        const typedError = error as TError;
-        
-        // Проверяем, что хук все еще актуален
-        if (currentVersion === versionRef.current) {
-          setState({
-            data: null,
+      } catch (err) {
+        const typedError = err as TError;
+        if (currentVersionCapture === versionRef.current) {
+          setState({ 
+            data: state.data, 
             error: typedError,
             isLoading: false,
             isSuccess: false,
             isError: true,
           });
-          
-          // Вызываем колбэк ошибки
-          if (options.onError) {
-            await options.onError(typedError, params);
+
+          if (hookOptions.onError) {
+            await hookOptions.onError(typedError, mutateParams);
           }
-          
-          // Вызываем колбэк завершения
-          if (options.onSettled) {
-            await options.onSettled(null, typedError, params);
-          }
-          
-          telemetry.endSpan(spanId, 'error', error instanceof Error ? error : new Error(String(error)));
         }
-        
-        throw error;
+      } finally {
+        if (traceSpanId) {
+          telemetry.endSpan(traceSpanId);
+        }
+        if (currentVersionCapture === versionRef.current) {
+          if (hookOptions.onSettled) {
+            const finalData = state.isSuccess ? state.data : null; 
+            const finalError = state.isError ? state.error : null; 
+            await hookOptions.onSettled(finalData, finalError, mutateParams);
+          }
+        }
       }
     },
-    [mutationFn, options]
+    [mutationFn, hookOptions, state.isLoading, state.data] 
   );
   
-  // Функция для сброса состояния
-  const reset = useCallback(() => {
-    setState({
-      data: null,
-      error: null,
-      isLoading: false,
-      isSuccess: false,
-      isError: false,
-    });
-  }, []);
-  
   return {
-    ...state,
     mutate,
-    reset,
+    data: state.data,
+    error: state.error,
+    isLoading: state.isLoading,
+    isSuccess: state.isSuccess,
+    isError: state.isError,
   };
 }
 
@@ -280,12 +292,10 @@ export function useInfiniteQuery<TData, TParams>(
   useEffect(() => {
     if (data && status === 'success') {
       setAllData(prev => {
-        // Если это первая страница, заменяем все данные
         if (page === 1) {
           return [...data];
         }
         
-        // Добавляем данные к существующим
         return [...prev, ...data];
       });
     }
@@ -295,7 +305,6 @@ export function useInfiniteQuery<TData, TParams>(
   const fetchNextPage = useCallback(() => {
     if (status === 'loading') return;
     
-    // Если есть функция для определения следующей страницы
     if (options.getNextPageParam && data) {
       const nextPage = options.getNextPageParam(data);
       
@@ -303,7 +312,6 @@ export function useInfiniteQuery<TData, TParams>(
         setPage(nextPage);
       }
     } else {
-      // По умолчанию просто увеличиваем номер страницы
       setPage(prev => prev + 1);
     }
   }, [status, data, options.getNextPageParam]);

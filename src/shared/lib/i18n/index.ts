@@ -61,16 +61,12 @@ const ruTranslations: TranslationDictionary = {
     operationFailed: 'Операция не выполнена',
   },
   plurals: {
-    pages: {
-      0: '{{count}} страница',
-      1: '{{count}} страницы',
-      2: '{{count}} страниц',
-    },
-    users: {
-      0: '{{count}} пользователь',
-      1: '{{count}} пользователя',
-      2: '{{count}} пользователей',
-    },
+    'pages.0': '{{count}} страница',
+    'pages.1': '{{count}} страницы',
+    'pages.2': '{{count}} страниц',
+    'users.0': '{{count}} пользователь',
+    'users.1': '{{count}} пользователя',
+    'users.2': '{{count}} пользователей',
   },
 };
 
@@ -129,14 +125,10 @@ const enTranslations: TranslationDictionary = {
     operationFailed: 'Operation failed',
   },
   plurals: {
-    pages: {
-      0: '{{count}} page',
-      1: '{{count}} pages',
-    },
-    users: {
-      0: '{{count}} user',
-      1: '{{count}} users',
-    },
+    'pages.0': '{{count}} page',
+    'pages.1': '{{count}} pages',
+    'users.0': '{{count}} user',
+    'users.1': '{{count}} users',
   },
 };
 

@@ -1,13 +1,14 @@
 import { useCallback } from 'react';
 import { useSettingsStore } from '../model/store';
+import type { SettingsState, SettingsActions } from '../model/types';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { Avatar } from '@/shared/ui/avatar';
 
 export function ProfileSettings() {
-  const { profile, isLoading, error, updateProfile } = useSettingsStore((state) => ({
-    profile: state.profile,
+  const { profile, isLoading, error, updateProfile } = useSettingsStore((state: SettingsState & SettingsActions) => ({
+    profile: state.settings?.profile,
     isLoading: state.isLoading,
     error: state.error,
     updateProfile: state.updateProfile,

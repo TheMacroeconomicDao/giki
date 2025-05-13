@@ -14,7 +14,7 @@ import {
 } from '@/shared/ui/dropdown-menu';
 
 import { useAuth } from '@/features/auth';
-import { UserAvatar } from '@/entities/user';
+import { UserAvatar } from '@/entities/user/ui';
 
 export const UserMenu: React.FC = () => {
   const { user, isAuthenticated, login, logout, isLoading } = useAuth();

@@ -88,7 +88,7 @@ export function useI18n() {
     throw new Error('useI18n must be used within I18nProvider');
   }
   
-  return context;
+  return context as I18nContextValue;
 }
 
 /**
